@@ -1,11 +1,13 @@
-Gamestate = require "hump.gamestate"
+Gamestate = require("hump.gamestate")
+Utils = require("Utils")
 
 Menu = require("states.Menu")
 Game = require("states.Game")
 
 function love.load()
+    love.graphics.setDefaultFilter("nearest", "nearest")
     Gamestate.registerEvents()
-    Gamestate.switch(Menu)
+    Gamestate.switch(Game)
 end
 
 function love.update(dt)

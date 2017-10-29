@@ -1,5 +1,5 @@
-local Class = require "hump.class"
-local vector = require "hump.vector"
+local Class = require("hump.class")
+local vector = require("hump.vector")
 
 local U = Class{}
 
@@ -7,6 +7,12 @@ function U:init(x, y)
     self.pos = vector(x, y)
     self.w = 16
     self.h = 16
+end
+
+function U:moveTo(x, y)
+    self.pos.x = x
+    self.pos.y = y
+
 end
 
 function U:update(dt)
