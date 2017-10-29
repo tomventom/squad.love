@@ -1,9 +1,21 @@
 local Class = require("hump.class")
-local TileType = require("TileType")
-
+local TileType = require("lib.TileType")
 local Tilemap = Class{}
 
-
+local function clone(t)
+    if type(t) ~= "table" then return t end
+    local meta = getmetatable(t)
+    local target = {}
+    for k, v in pairs(t) do
+        if type(v) == "table" then
+            target[k] = clone(v)
+        else
+            target[k] = v
+        end
+    end
+    setmetatable(target, meta)
+    return target
+end
 
 function Tilemap:init(sizeX, sizeY)
     -- initialize tiles with a name and sprite index from Quads table
@@ -16,36 +28,35 @@ function Tilemap:init(sizeX, sizeY)
     self.sizeX = sizeX
     self.sizeY = sizeY
     for x = 1, sizeX do
-        self.tiles[x] = {}
         for y = 1, sizeY do
-            self.tiles[x][y] = self.grassTile
+            self.tiles[x * sizeY + y-1] = self.grassTile
         end
     end
 
     -- swamp
     for x = 3, 5 do
         for y = 7, 10 do
-            self.tiles[x][y] = self.swampTile
+            self.tiles[x * sizeY + y-1] = self.swampTile
         end
     end
 
     -- U shaped water
-    self.tiles[4][4] = self.waterTile
-    self.tiles[5][4] = self.waterTile
-    self.tiles[6][4] = self.waterTile
-    self.tiles[7][4] = self.waterTile
-    self.tiles[8][4] = self.waterTile
-    self.tiles[4][5] = self.waterTile
-    self.tiles[4][6] = self.waterTile
-    self.tiles[8][5] = self.waterTile
-    self.tiles[8][6] = self.waterTile
+    self.tiles[4 * sizeY + 4-1] = self.waterTile
+    self.tiles[5 * sizeY + 4-1] = self.waterTile
+    self.tiles[6 * sizeY + 4-1] = self.waterTile
+    self.tiles[7 * sizeY + 4-1] = self.waterTile
+    self.tiles[8 * sizeY + 4-1] = self.waterTile
+    self.tiles[4 * sizeY + 5-1] = self.waterTile
+    self.tiles[4 * sizeY + 6-1] = self.waterTile
+    self.tiles[8 * sizeY + 5-1] = self.waterTile
+    self.tiles[8 * sizeY + 6-1] = self.waterTile
 
 end
 
 -- set tile at x, y to given type
 function Tilemap:setTile(x, y, type)
-    -- TODO: check if tiles[x][y] exists
-    self.tiles[x][y] = type
+    -- TODO: check if tiles[x * sizeY + y-1] exists
+    self.tiles[x * sizeY + y-1] = type
 end
 
 -- return the tile at given WORLD coordinates
@@ -64,14 +75,21 @@ end
 -- return walkable value of tile at given TILEMAP coordinates
 function Tilemap:isTileWalkable(tx, ty)
     if tx >= 1 and tx <= self.sizeX and ty >= 1 and ty <= self.sizeY then
-        return self.tiles[tx][ty].walkable
+        return self.tiles[tx * self.sizeY + ty-1].walkable
     end
 end
+
+function Tilemap:getTileGrid()
+    local copy = clone(self.tiles)
+    return copy
+end
+
+
 
 function Tilemap:draw()
     for x = 1, self.sizeX do
         for y = 1, self.sizeY do
-            love.graphics.draw(Tileset, self.tiles[x][y].sprite, x * 32 - 32, y * 32 - 32)
+            love.graphics.draw(Tileset, self.tiles[x * self.sizeY + y-1].sprite, x * 32 - 32, y * 32 - 32)
         end
     end
 end

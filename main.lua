@@ -1,5 +1,5 @@
 Gamestate = require("hump.gamestate")
-Utils = require("Utils")
+Utils = require("lib.Utils")
 
 Menu = require("states.Menu")
 Game = require("states.Game")

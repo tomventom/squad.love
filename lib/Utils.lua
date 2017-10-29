@@ -39,13 +39,11 @@ end
 
 function U.min(t)
   local min = math.huge
-
-  for k,v in pairs( t ) do
+  for k,v in pairs(t) do
     if type(v) == 'number' then
-      min = math.min( min, v )
+      min = math.min(min, v)
     end
   end
-
   return min
 end
 
