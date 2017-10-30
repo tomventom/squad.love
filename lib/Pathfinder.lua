@@ -17,20 +17,22 @@ local function isGoal(x, y, tx, ty)
     return x == tx and y == ty
 end
 
-local function heuristic(nx, ny, gx, gy)
-    dx = math.abs(nx - gx)
-    dy = math.abs(ny - gy)
-    if nx ~= gx and ny ~= gy then
-        return (dx + dy) + (dx + dy) * 0.001
-    else
-        return (dx + dy)
-    end
-
+local function isDiagonal(nx, ny, gx, gy)
+    return nx ~= gx and ny ~= gy
 end
 
+-- good heuristic
+local function heuristic(nx, ny, gx, gy)
+    local dx = math.abs(nx - gx)
+    local dy = math.abs(ny - gy)
+    local h = 1 * (dx + dy) + (1.5 - 2 * 1) * math.min(dx, dy)
+    return h + (h * 0.001)
+end
+
+-- bad heuristic
 local function chebyshev(nx, ny, gx, gy)
-    dx = math.abs(nx - gx)
-    dy = math.abs(ny - gy)
+    local dx = math.abs(nx - gx)
+    local dy = math.abs(ny - gy)
     return 1 * (dx + dy) + (1.4 - 2 * 1) * math.min(dx, dy)
 end
 
@@ -53,12 +55,13 @@ local function constructPath(target, discardTarget)
         end
         if not discardTarget then
             table.insert(path, 1, target)
+        else
+            if #path == 1 then
+                return
+            end
         end
         table.remove(path, #path)
         Utils.reverse(path)
-    end
-    for i = 1, #path do
-        print(i, path[i].x, path[i].y)
     end
     return path
 end
@@ -72,7 +75,7 @@ function Pathfinder.findPath(sx, sy, tx, ty)
     while #open > 0 do
         local q
         local index
-        minF = math.huge
+        local minF = math.huge
         for i = 1, #open do
             if open[i].f < minF then
                 minF = open[i].f
@@ -82,8 +85,8 @@ function Pathfinder.findPath(sx, sy, tx, ty)
         end
         table.remove(open, index)
         table.insert(closed, q)
-        if not q then return end
-        if q.x == tx and q.y == ty then print("path found") return end
+        if not q then print("no path") return end
+        if q.x == tx and q.y == ty then print("already on source tile") return end
 
         local neighbours = {}
 
@@ -160,14 +163,14 @@ function Pathfinder.findPath(sx, sy, tx, ty)
 
         for k, v in pairs(neighbours) do
             if isGoal(v.x, v.y, tx, ty) then
-                print("path found")
                 if tiles[tx * h + ty-1].walkable then
                     return constructPath(v, false)
                 else
                     return constructPath(v, true)
                 end
             end
-            v.g = tiles[v.x * h + v.y-1].moveCost + v.parent.g
+            v.g = tiles[v.x * h + v.y-1].moveCost + v.parent.g + 1
+            if (isDiagonal(q.x, q.y, v.x, v.y)) then v.g = v.g + .501 end
             v.h = heuristic(v.x, v.y, tx, ty)
             v.f = v.g + v.h
 
@@ -183,7 +186,6 @@ function Pathfinder.findPath(sx, sy, tx, ty)
         end
     end
     -- end while
-    print("no path")
     return nil
 end
 -- if q.x < w then table.insert(q, Node(q.x+1, q.y)) end

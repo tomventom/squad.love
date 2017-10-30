@@ -15,11 +15,13 @@ Quads = {}
 Quads[1] = love.graphics.newQuad(0, 0, 32, 32, tw, th) -- grass
 Quads[2] = love.graphics.newQuad(32, 0, 32, 32, tw, th) -- swamp
 Quads[3] = love.graphics.newQuad(64, 0, 32, 32, tw, th) -- water
-Quads[4] = love.graphics.newQuad(96, 0, 32, 32, tw, th) -- unit
+Quads[4] = love.graphics.newQuad(128, 0, 32, 32, tw, th) -- unit
 
-local tmap = Tilemap(15, 10)
-local pathf = Pathfinder(tmap, 15, 10)
-
+local tmap = Tilemap(30, 30)
+local pathf = Pathfinder(tmap, 30, 30)
+local mx, my = 0,0
+local tx, ty = 0,0
+local drawMousePos = false
 
 -- initialize the map, unit and camera
 function Game:init()
@@ -29,7 +31,12 @@ end
 
 function Game:update(dt)
     unit:update(dt)
-    -- camera:lockPosition(unit.pos.x * 32 - 32, unit.pos.y * 32 - 32, Camera.smooth.damped(4))
+    camera:lockPosition(unit.pos.x * 32 - 32, unit.pos.y * 32 - 32, Camera.smooth.damped(4))
+    -- get the mouse position in world coordinates
+    mx, my = camera:worldCoords(love.mouse.getPosition())
+    tx, ty = tmap:getTile(mx, my)
+
+    drawMousePos = tx ~= 0 and ty ~= 0
 end
 
 function Game:keypressed(key)
@@ -40,12 +47,9 @@ function Game:keypressed(key)
 end
 
 function Game:mousereleased()
-    -- get the mouse position in world coordinates
-    local mx, my = camera:worldCoords(love.mouse.getPosition())
-    local tx, ty = tmap:getTile(mx, my)
-
     -- if a tile was clicked, move the unit to it
     if tx ~= 0 and ty ~= 0 then
+        unit:fixPosition()
         local path = pathf.findPath(unit.pos.x, unit.pos.y, tx, ty)
         if path then
             unit:move(path)
@@ -58,6 +62,7 @@ function Game:draw()
     camera:attach()
     tmap:draw()
     unit:draw()
+    if drawMousePos then love.graphics.rectangle("line", tx * 32 - 32, ty * 32 - 32, 32, 32) end
     camera:detach()
 end
 

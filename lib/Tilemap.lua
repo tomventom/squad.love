@@ -72,7 +72,6 @@ function Tilemap:getTile(mx, my)
     if tx >= 1 and tx <= self.sizeX and ty >= 1 and ty <= self.sizeY then
         return tx, ty
     else
-        print("No tile clicked")
         return 0, 0
     end
 end
