@@ -42,7 +42,7 @@ function U:update(dt)
     -- this adds dt every frame, adding 1 every second
     timer = timer + dt
     -- this checks if timer is greater than the time interval (in seconds)
-    if timer >= .5 then
+    if timer >= .2 then
         -- subtract timer by interval
         timer = timer - .2
         if hasPath then

@@ -17,6 +17,16 @@ local function clone(t)
     return target
 end
 
+local function stringToTileType(self, string)
+    if string == "grass" then
+        return self.grassTile
+    elseif string == "swamp" then
+        return self.swampTile
+    elseif string == "water" then
+        return self.waterTile
+    end
+end
+
 function Tilemap:init(sizeX, sizeY)
     -- initialize tiles with a name and sprite index from Quads table
     self.grassTile = TileType("grass", 1, 1)
@@ -27,29 +37,40 @@ function Tilemap:init(sizeX, sizeY)
     self.tiles = {}
     self.sizeX = sizeX
     self.sizeY = sizeY
-    for x = 1, sizeX do
-        for y = 1, sizeY do
-            self.tiles[x * sizeY + y-1] = self.grassTile
+    local curr
+    local index = 1
+    for line in io.lines("maps/demo.csv") do
+        curr = Utils.ParseCSVLine(line)
+
+        for x = 1, sizeX do
+            self.tiles[x * sizeY + index-1] = stringToTileType(self, curr[x])
         end
+        index = index + 1
     end
 
-    -- swamp
-    for x = 3, 5 do
-        for y = 7, 10 do
-            self.tiles[x * sizeY + y-1] = self.swampTile
-        end
-    end
-
-    -- U shaped water
-    self.tiles[4 * sizeY + 4-1] = self.waterTile
-    self.tiles[5 * sizeY + 4-1] = self.waterTile
-    self.tiles[6 * sizeY + 4-1] = self.waterTile
-    self.tiles[7 * sizeY + 4-1] = self.waterTile
-    self.tiles[8 * sizeY + 4-1] = self.waterTile
-    self.tiles[4 * sizeY + 5-1] = self.waterTile
-    self.tiles[4 * sizeY + 6-1] = self.waterTile
-    self.tiles[8 * sizeY + 5-1] = self.waterTile
-    self.tiles[8 * sizeY + 6-1] = self.waterTile
+    -- for x = 1, sizeX do
+    --     for y = 1, sizeY do
+    --         self.tiles[x * sizeY + y-1] = self.grassTile
+    --     end
+    -- end
+    --
+    -- -- swamp
+    -- for x = 3, 5 do
+    --     for y = 7, 10 do
+    --         self.tiles[x * sizeY + y-1] = self.swampTile
+    --     end
+    -- end
+    --
+    -- -- U shaped water
+    -- self.tiles[4 * sizeY + 4-1] = self.waterTile
+    -- self.tiles[5 * sizeY + 4-1] = self.waterTile
+    -- self.tiles[6 * sizeY + 4-1] = self.waterTile
+    -- self.tiles[7 * sizeY + 4-1] = self.waterTile
+    -- self.tiles[8 * sizeY + 4-1] = self.waterTile
+    -- self.tiles[4 * sizeY + 5-1] = self.waterTile
+    -- self.tiles[4 * sizeY + 6-1] = self.waterTile
+    -- self.tiles[8 * sizeY + 5-1] = self.waterTile
+    -- self.tiles[8 * sizeY + 6-1] = self.waterTile
     -- self.tiles[4 * sizeY + 7-1] = self.waterTile
     -- self.tiles[5 * sizeY + 7-1] = self.waterTile
     -- self.tiles[6 * sizeY + 7-1] = self.waterTile

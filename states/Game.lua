@@ -17,8 +17,8 @@ Quads[2] = love.graphics.newQuad(32, 0, 32, 32, tw, th) -- swamp
 Quads[3] = love.graphics.newQuad(64, 0, 32, 32, tw, th) -- water
 Quads[4] = love.graphics.newQuad(128, 0, 32, 32, tw, th) -- unit
 
-local tmap = Tilemap(30, 30)
-local pathf = Pathfinder(tmap, 30, 30)
+local tmap = Tilemap(64, 64)
+local pathf = Pathfinder(tmap, 64, 64)
 local mx, my = 0,0
 local tx, ty = 0,0
 local drawMousePos = false

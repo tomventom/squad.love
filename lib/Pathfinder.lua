@@ -68,6 +68,8 @@ end
 
 function Pathfinder.findPath(sx, sy, tx, ty)
 
+    if not tiles[tx * h + ty-1].walkable then return end
+
     local open = {}
     local closed = {}
     table.insert(open, Node(sx, sy))
