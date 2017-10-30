@@ -26,7 +26,7 @@ function U.round(num)
 	return math.floor(num + 0.5)
 end
 
-function U.Reverse(arr)
+function U.reverse(arr)
 	local i, j = 1, #arr
 
 	while i < j do

@@ -19,9 +19,9 @@ end
 
 function Tilemap:init(sizeX, sizeY)
     -- initialize tiles with a name and sprite index from Quads table
-    self.grassTile = TileType("grass", 1)
-    self.swampTile = TileType("swamp", 2)
-    self.waterTile = TileType("water", 3, false)
+    self.grassTile = TileType("grass", 1, 1)
+    self.swampTile = TileType("swamp", 2, 4)
+    self.waterTile = TileType("water", 3, math.huge, false)
 
     -- create the tile array and set all to grass
     self.tiles = {}
@@ -50,6 +50,11 @@ function Tilemap:init(sizeX, sizeY)
     self.tiles[4 * sizeY + 6-1] = self.waterTile
     self.tiles[8 * sizeY + 5-1] = self.waterTile
     self.tiles[8 * sizeY + 6-1] = self.waterTile
+    -- self.tiles[4 * sizeY + 7-1] = self.waterTile
+    -- self.tiles[5 * sizeY + 7-1] = self.waterTile
+    -- self.tiles[6 * sizeY + 7-1] = self.waterTile
+    -- self.tiles[7 * sizeY + 7-1] = self.waterTile
+    -- self.tiles[8 * sizeY + 7-1] = self.waterTile
 
 end
 
@@ -81,7 +86,7 @@ end
 
 function Tilemap:getTileGrid()
     local copy = clone(self.tiles)
-    return copy
+    if copy then return copy end
 end
 
 
