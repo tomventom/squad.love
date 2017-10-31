@@ -22,14 +22,18 @@ local pathf = Pathfinder(tmap, 64, 64)
 local mx, my = 0,0
 local tx, ty = 0,0
 local drawMousePos = false
+local drawClosed = false
+local closedList
 
 -- initialize the map, unit and camera
 function Game:init()
     unit = Unit(5, 5)
-    camera = Camera(256, 192)
+    camera = Camera(256, 192, .5)
 end
 
 function Game:update(dt)
+    if dt > 0.04 then return end
+
     unit:update(dt)
     camera:lockPosition(unit.pos.x * 32 - 32, unit.pos.y * 32 - 32, Camera.smooth.damped(4))
     -- get the mouse position in world coordinates
@@ -43,6 +47,8 @@ function Game:keypressed(key)
     if key == "escape" then
         -- Gamestate.switch(Menu)
         love.event.quit()
+    elseif key == "k" then
+        drawClosed = not drawClosed
     end
 end
 
@@ -50,7 +56,8 @@ function Game:mousereleased()
     -- if a tile was clicked, move the unit to it
     if tx ~= 0 and ty ~= 0 then
         unit:fixPosition()
-        local path = pathf.findPath(unit.pos.x, unit.pos.y, tx, ty)
+        local path, closed = pathf.findPath(unit.pos.x, unit.pos.y, tx, ty)
+        closedList = closed
         if path then
             unit:move(path)
         end
@@ -62,6 +69,13 @@ function Game:draw()
     camera:attach()
     tmap:draw()
     unit:draw()
+    if drawClosed and closedList then
+        for i = 1, #closedList do
+            love.graphics.setColor(i, 0, 0, closedList[i].g * 10)
+            love.graphics.rectangle("line", closedList[i].x * 32 - 32, closedList[i].y * 32 - 32, 32, 32)
+        end
+        love.graphics.setColor(255, 255, 255, 255)
+    end
     if drawMousePos then love.graphics.rectangle("line", tx * 32 - 32, ty * 32 - 32, 32, 32) end
     camera:detach()
 end

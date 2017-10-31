@@ -29,7 +29,7 @@ local function heuristic(nx, ny, gx, gy)
     return h + (h * 0.001)
 end
 
--- bad heuristic
+-- bad heuristic, not used
 local function chebyshev(nx, ny, gx, gy)
     local dx = math.abs(nx - gx)
     local dy = math.abs(ny - gy)
@@ -37,15 +37,19 @@ local function chebyshev(nx, ny, gx, gy)
 end
 
 local function contains(t, node)
-    for k,v in pairs(t) do
-        if v.x == node.x and v.y == node.y then return true end
+    -- for k,v in pairs(t) do
+    --     if v.x == node.x and v.y == node.y then return true end
+    -- end
+    -- return false
+    for i = 1, #t do
+        if t[i].x == node.x and t[i].y == node.y then return true end
     end
     return false
 end
 
-local function constructPath(target, discardTarget)
+local function constructPath(target, discardTarget, closedList)
     local path = {}
-
+    local startTime = love.timer.getTime()
     if target.parent then
         local i = 1
         path[1] = target.parent
@@ -63,7 +67,10 @@ local function constructPath(target, discardTarget)
         table.remove(path, #path)
         Utils.reverse(path)
     end
-    return path
+    local endTime = love.timer.getTime()
+    print(string.format("ms: %.3f", (endTime - startTime) * 1000000))
+
+    return path, closedList
 end
 
 function Pathfinder.findPath(sx, sy, tx, ty)
@@ -166,9 +173,9 @@ function Pathfinder.findPath(sx, sy, tx, ty)
         for k, v in pairs(neighbours) do
             if isGoal(v.x, v.y, tx, ty) then
                 if tiles[tx * h + ty-1].walkable then
-                    return constructPath(v, false)
+                    return constructPath(v, false, closed)
                 else
-                    return constructPath(v, true)
+                    return constructPath(v, true, closed)
                 end
             end
             v.g = tiles[v.x * h + v.y-1].moveCost + v.parent.g + 1

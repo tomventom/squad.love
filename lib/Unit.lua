@@ -9,6 +9,8 @@ local hasPath = false
 local timer = 0
 local index = 1
 
+local speed = 0.3
+
 function U:init(x, y)
     self.pos = vector(x, y)
     self.w = 16
@@ -42,13 +44,13 @@ function U:update(dt)
     -- this adds dt every frame, adding 1 every second
     timer = timer + dt
     -- this checks if timer is greater than the time interval (in seconds)
-    if timer >= .2 then
+    if timer >= speed then
         -- subtract timer by interval
-        timer = timer - .2
+        timer = timer - speed
         if hasPath then
             -- self.pos.x = self.path[index].x
             -- self.pos.y = self.path[index].y
-            flux.to(self.pos, .2, {x = self.path[index].x, y = self.path[index].y})
+            flux.to(self.pos, speed, {x = self.path[index].x, y = self.path[index].y})
             index = index + 1
             if index > #self.path then
                 hasPath = false
