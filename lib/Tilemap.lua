@@ -24,12 +24,15 @@ local function stringToTileType(self, string)
         return self.swampTile
     elseif string == "water" then
         return self.waterTile
+    elseif string == "sand" then
+        return self.sandTile
     end
 end
 
 function Tilemap:init(sizeX, sizeY)
     -- initialize tiles with a name and sprite index from Quads table
     self.grassTile = TileType("grass", 1, 1)
+    self.sandTile = TileType("sand", 5, 1)
     self.swampTile = TileType("swamp", 2, 4)
     self.waterTile = TileType("water", 3, math.huge, false)
 
@@ -39,7 +42,7 @@ function Tilemap:init(sizeX, sizeY)
     self.sizeY = sizeY
     local curr
     local index = 1
-    for line in io.lines("maps/demo.csv") do
+    for line in io.lines("maps/desert.csv") do
         curr = Utils.ParseCSVLine(line)
 
         for x = 1, sizeX do

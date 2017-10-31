@@ -16,6 +16,7 @@ Quads[1] = love.graphics.newQuad(0, 0, 32, 32, tw, th) -- grass
 Quads[2] = love.graphics.newQuad(32, 0, 32, 32, tw, th) -- swamp
 Quads[3] = love.graphics.newQuad(64, 0, 32, 32, tw, th) -- water
 Quads[4] = love.graphics.newQuad(128, 0, 32, 32, tw, th) -- unit
+Quads[5] = love.graphics.newQuad(0, 32, 32, 32, tw, th) -- sand
 
 local tmap = Tilemap(64, 64)
 local pathf = Pathfinder(tmap, 64, 64)
@@ -71,7 +72,7 @@ function Game:draw()
     unit:draw()
     if drawClosed and closedList then
         for i = 1, #closedList do
-            love.graphics.setColor(i, 0, 0, closedList[i].g * 10)
+            love.graphics.setColor(255, 0, 0, 255)
             love.graphics.rectangle("line", closedList[i].x * 32 - 32, closedList[i].y * 32 - 32, 32, 32)
         end
         love.graphics.setColor(255, 255, 255, 255)

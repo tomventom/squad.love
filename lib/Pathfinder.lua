@@ -33,7 +33,7 @@ end
 local function chebyshev(nx, ny, gx, gy)
     local dx = math.abs(nx - gx)
     local dy = math.abs(ny - gy)
-    return 1 * (dx + dy) + (1.4 - 2 * 1) * math.min(dx, dy)
+    return 1 * (dx + dy) + (1.5 - 2 * 1) * math.min(dx, dy)
 end
 
 local function contains(t, node)
@@ -178,8 +178,8 @@ function Pathfinder.findPath(sx, sy, tx, ty)
                     return constructPath(v, true, closed)
                 end
             end
-            v.g = tiles[v.x * h + v.y-1].moveCost + v.parent.g + 1
-            if (isDiagonal(q.x, q.y, v.x, v.y)) then v.g = v.g + .501 end
+            v.g = tiles[v.x * h + v.y-1].moveCost + v.parent.g
+            if (isDiagonal(q.x, q.y, v.x, v.y)) then v.g = v.g end
             v.h = heuristic(v.x, v.y, tx, ty)
             v.f = v.g + v.h
 
