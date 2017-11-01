@@ -1,8 +1,8 @@
-local Class = require "hump.class"
+local Class = require "lib.Class"
 
-local TT = Class{}
+local TT = Class:derive("TileType")
 
-function TT:init(name, quad, moveCost, walkable)
+function TT:new(name, quad, moveCost, walkable)
     self.name = name
     self.sprite = Quads[quad]
     self.w = 32

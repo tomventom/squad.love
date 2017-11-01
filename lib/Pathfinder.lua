@@ -1,7 +1,7 @@
-local Class = require("hump.class")
+local Class = require("lib.Class")
 local Node = require("lib.Node")
 
-local Pathfinder = Class{}
+local Pathfinder = Class:derive("Pathfinder")
 
 local min, abs = math.min, math.abs
 local sqrt2 = math.sqrt(2)
@@ -9,7 +9,7 @@ local w = 0
 local h = 0
 local tiles = nil
 
-function Pathfinder:init(tilemap, width, height)
+function Pathfinder:new(tilemap, width, height)
     w = width
     h = height
     tiles = tilemap:getTileGrid()

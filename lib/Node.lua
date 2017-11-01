@@ -1,8 +1,8 @@
-local Class = require "hump.class"
+local Class = require("lib.Class")
 
-local N = Class{}
+local N = Class:derive("Node")
 
-function N:init(x, y)
+function N:new(x, y)
     self.parent = nil
     self.x = x
     self.y = y

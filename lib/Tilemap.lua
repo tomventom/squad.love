@@ -1,6 +1,6 @@
-local Class = require("hump.class")
+local Class = require("lib.Class")
 local TileType = require("lib.TileType")
-local Tilemap = Class{}
+local Tilemap = Class:derive("Tilemap")
 
 local function clone(t)
     if type(t) ~= "table" then return t end
@@ -29,7 +29,7 @@ local function stringToTileType(self, string)
     end
 end
 
-function Tilemap:init(sizeX, sizeY)
+function Tilemap:new(sizeX, sizeY)
     -- initialize tiles with a name and sprite index from Quads table
     self.grassTile = TileType("grass", 1, 1)
     self.sandTile = TileType("sand", 5, 1)
