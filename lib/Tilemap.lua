@@ -20,6 +20,10 @@ end
 local function stringToTileType(self, string)
     if string == "grass" then
         return self.grassTile
+    elseif string == "empty" then
+        return self.empty
+    elseif string == "tree" then
+        return self.tree
     elseif string == "swamp" then
         return self.swampTile
     elseif string == "water" then
@@ -41,11 +45,12 @@ function Tilemap:new(sizeX, sizeY)
 
     -- create the tile array and set all to grass
     self.tiles = {}
+    self.objLayer = {}
     self.sizeX = sizeX
     self.sizeY = sizeY
     local curr
     local index = 1
-    for line in io.lines("maps/demo.csv") do
+    for line in io.lines("maps/forest_tileLayer.csv") do
         curr = Utils.ParseCSVLine(line)
 
         for x = 1, sizeX do
@@ -53,19 +58,16 @@ function Tilemap:new(sizeX, sizeY)
         end
         index = index + 1
     end
+    index = 1
+    for line in io.lines("maps/forest_objLayer.csv") do
+        curr = Utils.ParseCSVLine(line)
 
-    self.objLayer = {}
-    for x = 1, sizeX do
-        for y = 1, sizeY do
-            self.objLayer[x * sizeY + y - 1] = self.empty
+        for x = 1, sizeX do
+            self.objLayer[x * sizeY + index - 1] = stringToTileType(self, curr[x])
         end
+        index = index + 1
     end
 
-    for x = 20, 26 do
-        for y = 15, 17 do
-            self.objLayer[x * sizeY + y - 1] = self.tree
-        end
-    end
 end
 
 -- set tile at x, y to given type
@@ -95,10 +97,10 @@ end
 
 function Tilemap:getTileGrid()
     local copy = clone(self.tiles)
-
     for x = 1, self.sizeX do
         for y = 1, self.sizeY do
             copy[x * self.sizeY + y - 1].moveCost = copy[x * self.sizeY + y - 1].moveCost + self.objLayer[x * self.sizeY + y - 1].moveCost
+            if not self.objLayer[x * self.sizeY + y - 1].walkable then copy[x * self.sizeY + y - 1].walkable = false end
         end
     end
 
