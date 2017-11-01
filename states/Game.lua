@@ -18,6 +18,10 @@ Quads[2] = love.graphics.newQuad(32, 0, 32, 32, tw, th) -- swamp
 Quads[3] = love.graphics.newQuad(64, 0, 32, 32, tw, th) -- water
 Quads[4] = love.graphics.newQuad(128, 0, 32, 32, tw, th) -- unit
 Quads[5] = love.graphics.newQuad(0, 32, 32, 32, tw, th) -- sand
+Quads[6] = love.graphics.newQuad(128, 32, 32, 64, tw, th) -- tree
+
+
+Quads[99] = love.graphics.newQuad(96, 64, 32, 32, tw, th) -- empty
 
 local tmap = Tilemap(64, 64)
 local finders = {}
@@ -29,28 +33,43 @@ local drawClosed = false
 local closedList
 local units = {}
 
-local camX, camY = 0,0
+local dragging = false
+local dragX, dragY = 0,0
+local camX, camY, camZoom = 0,0,.5
 
 -- initialize the map, unit and camera
 function Game:init()
-    for i = 1, 6 do
-        units[i] = Pawn(i*10, 5)
+    for i = 1, 11 do
+        units[i] = Pawn(i*5, 5)
         finders[i] = Pathfinder(tmap, 64, 64)
     end
     -- unit = Pawn(60, 5)
-    camera = Camera(256, 192, .5)
+    camera = Camera(256, 192, camZoom)
 end
 
+function love.wheelmoved(x, y)
+    if y > 0 then
+        if camZoom < 2 then camZoom = camZoom + 0.05 end
+    elseif y < 0 then
+        if camZoom > 0.4 then camZoom = camZoom - 0.05 end
+    end
+    camera:zoomTo(camZoom)
+end
 
 function Game:update(dt)
     if dt > 0.04 then return end
     for i = 1, #units do
         units[i]:update(dt)
     end
+
+    if dragging then
+        camera.x = camera.x + dragX - mx
+        camera.y = camera.y + dragY - my
+    end
     -- camera:lockPosition(unit.pos.x * 32 - 32, unit.pos.y * 32 - 32, Camera.smooth.damped(4))
     if love.keyboard.isDown("w") then camY = -1 elseif love.keyboard.isDown("s") then camY = 1 end
     if love.keyboard.isDown("a") then camX = -1 elseif love.keyboard.isDown("d") then camX = 1 end
-    camera:move(camX * 300 * dt, camY * 300 * dt)
+    camera:move(camX * 400 * dt, camY * 400 * dt)
     camX, camY = 0,0
     -- get the mouse position in world coordinates
     mx, my = camera:worldCoords(love.mouse.getPosition())
@@ -71,22 +90,31 @@ function Game:keypressed(key)
         local goals = {}
         for i = 1, #units do
             units[i]:fixPosition()
-            goals[i] = finders[i].findPath(units[i].pos.x, units[i].pos.y, love.math.random(5, 59), love.math.random(5, 59))
+            goals[i] = finders[i]:findPath(units[i].pos.x, units[i].pos.y, love.math.random(5, 59), love.math.random(5, 59))
             if goals[i] then units[i]:move(goals[i]) end
         end
     end
 end
 
-function Game:mousereleased()
-    -- if a tile was clicked, move the unit to it
-    if tx ~= 0 and ty ~= 0 then
-        unit:fixPosition()
-        local path, closed = pathf.findPath(unit.pos.x, unit.pos.y, tx, ty)
-        closedList = closed
-        if path then
-            unit:move(path)
-        end
+function Game:mousepressed(x,y,key)
+    if key == 3 then
+        dragging = true
+        dragX, dragY = mx, my
     end
+end
+
+function Game:mousereleased(x,y,key)
+    if key == 3 then dragging = false end
+
+    -- if a tile was clicked, move the unit to it
+    -- if tx ~= 0 and ty ~= 0 then
+    --     unit:fixPosition()
+    --     local path, closed = pathf.findPath(unit.pos.x, unit.pos.y, tx, ty)
+    --     closedList = closed
+    --     if path then
+    --         unit:move(path)
+    --     end
+    -- end
 end
 
 function Game:draw()

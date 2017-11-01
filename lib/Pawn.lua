@@ -8,7 +8,6 @@ function Pawn:new(x, y)
 end
 
 function Pawn:saySomething()
-    print(self.pos.x)
 end
 
 return Pawn

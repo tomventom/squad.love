@@ -1,6 +1,5 @@
 local Class = require("lib.Class")
 local vector = require("hump.vector")
-local flux = require("lib.flux")
 
 local U = Class:derive("Unit")
 
@@ -40,7 +39,6 @@ function U:fixPosition()
 end
 
 function U:update(dt)
-    flux.update(dt)
     self.timer = self.timer + dt
     if self.timer >= speed then
         self.timer = self.timer - speed

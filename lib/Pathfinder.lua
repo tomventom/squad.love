@@ -7,12 +7,11 @@ local min, abs = math.min, math.abs
 local sqrt2 = math.sqrt(2)
 local w = 0
 local h = 0
-local tiles = nil
 
 function Pathfinder:new(tilemap, width, height)
     w = width
     h = height
-    tiles = tilemap:getTileGrid()
+    self.tiles = tilemap:getTileGrid()
 end
 
 local function isGoal(x, y, tx, ty)
@@ -63,9 +62,9 @@ local function constructPath(target, discardTarget, closedList)
     return path, closedList
 end
 
-function Pathfinder.findPath(sx, sy, tx, ty)
+function Pathfinder:findPath(sx, sy, tx, ty)
 
-    if not tiles[tx * h + ty-1].walkable then return end
+    if not self.tiles[tx * h + ty-1].walkable then return end
 
     local open = {}
     local closed = {}
@@ -147,13 +146,13 @@ function Pathfinder.findPath(sx, sy, tx, ty)
         end
         for k, v in pairs(neighbours) do
             if isGoal(v.x, v.y, tx, ty) then
-                if tiles[tx * h + ty-1].walkable then
+                if self.tiles[tx * h + ty-1].walkable then
                     return constructPath(v, false, closed)
                 else
                     return constructPath(v, true, closed)
                 end
             end
-            v.g = tiles[v.x * h + v.y-1].moveCost + v.parent.g
+            v.g = self.tiles[v.x * h + v.y-1].moveCost + v.parent.g
             v.h = heuristic(v.x, v.y, tx, ty)
             v.f = v.g + v.h
             if not contains(closed, v) then
