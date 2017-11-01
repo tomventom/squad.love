@@ -63,11 +63,13 @@ end
 
 function U:draw()
     love.graphics.draw(Tileset, Quads[4], self.pos.x * 32 - 32, self.pos.y * 32 - 32)
-    -- if draw and self.path then
-    --     for k, v in pairs(self.path) do
-    --         love.graphics.rectangle("line", v.x * 32 - 32, v.y * 32 - 32, 32, 32)
-    --     end
-    -- end
+    if draw and self.path then
+        love.graphics.setColor(0, 0, 0, 255)
+        for k, v in pairs(self.path) do
+            love.graphics.rectangle("line", v.x * 32 - 32, v.y * 32 - 32, 32, 32)
+        end
+        love.graphics.setColor(255, 255, 255, 255)
+    end
 end
 
 return U

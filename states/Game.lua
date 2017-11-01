@@ -28,7 +28,7 @@ local closedList
 
 -- initialize the map, unit and camera
 function Game:init()
-    unit = Unit(5, 5)
+    unit = Unit(60, 5)
     camera = Camera(256, 192, .5)
 end
 
@@ -72,7 +72,7 @@ function Game:draw()
     unit:draw()
     if drawClosed and closedList then
         for i = 1, #closedList do
-            love.graphics.setColor(255, 0, 0, 255)
+            love.graphics.setColor(255, 0, 0, 180)
             love.graphics.rectangle("line", closedList[i].x * 32 - 32, closedList[i].y * 32 - 32, 32, 32)
         end
         love.graphics.setColor(255, 255, 255, 255)

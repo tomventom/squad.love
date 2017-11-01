@@ -3,6 +3,8 @@ local Node = require("lib.Node")
 
 local Pathfinder = Class{}
 
+local min, abs = math.min, math.abs
+local sqrt2 = math.sqrt(2)
 local w = 0
 local h = 0
 local tiles = nil
@@ -23,17 +25,9 @@ end
 
 -- good heuristic
 local function heuristic(nx, ny, gx, gy)
-    local dx = math.abs(nx - gx)
-    local dy = math.abs(ny - gy)
-    local h = 1 * (dx + dy) + (1.5 - 2 * 1) * math.min(dx, dy)
-    return h + (h * 0.001)
-end
-
--- bad heuristic, not used
-local function chebyshev(nx, ny, gx, gy)
-    local dx = math.abs(nx - gx)
-    local dy = math.abs(ny - gy)
-    return 1 * (dx + dy) + (1.5 - 2 * 1) * math.min(dx, dy)
+    local dx = abs(nx - gx)
+    local dy = abs(ny - gy)
+    return 1 * (dx + dy) + (sqrt2 - 2 * 1) * min(dx, dy)
 end
 
 local function contains(t, node)
@@ -49,7 +43,6 @@ end
 
 local function constructPath(target, discardTarget, closedList)
     local path = {}
-    local startTime = love.timer.getTime()
     if target.parent then
         local i = 1
         path[1] = target.parent
@@ -67,9 +60,6 @@ local function constructPath(target, discardTarget, closedList)
         table.remove(path, #path)
         Utils.reverse(path)
     end
-    local endTime = love.timer.getTime()
-    print(string.format("ms: %.3f", (endTime - startTime) * 1000000))
-
     return path, closedList
 end
 
@@ -98,63 +88,22 @@ function Pathfinder.findPath(sx, sy, tx, ty)
         if q.x == tx and q.y == ty then print("already on source tile") return end
 
         local neighbours = {}
-
-        -- This is the 4-way version
-        -- if q.x > 1 then
-        --     local node = Node(q.x - 1, q.y)
-        --     node.parent = q
-        --     table.insert(neighbours, node)
-        -- end
-        --
-        -- if q.x < w then
-        --     local node = Node(q.x + 1, q.y)
-        --     node.parent = q
-        --     table.insert(neighbours, node)
-        -- end
-        -- if q.y > 1 then
-        --     local node = Node(q.x, q.y - 1)
-        --     node.parent = q
-        --     table.insert(neighbours, node)
-        -- end
-        -- if q.y < h then
-        --     local node = Node(q.x, q.y + 1)
-        --     node.parent = q
-        --     table.insert(neighbours, node)
-        -- end
-
-        -- this is the 8-way version. allows diagonal movement
+        local tryLeft = false
         -- try left
         if q.x > 1 then
+            tryLeft = true
             local node = Node(q.x - 1, q.y)
             node.parent = q
             table.insert(neighbours, node)
-            if q.y > 1 then
-                local node = Node(q.x - 1, q.y - 1)
-                node.parent = q
-                table.insert(neighbours, node)
-            end
-            if q.y < h then
-                local node = Node(q.x - 1, q.y + 1)
-                node.parent = q
-                table.insert(neighbours, node)
-            end
         end
 
+        local tryRight = false
         -- try right
         if q.x < w then
+            tryRight = true
             local node = Node(q.x + 1, q.y)
             node.parent = q
             table.insert(neighbours, node)
-            if q.y > 1 then
-                local node = Node(q.x + 1, q.y - 1)
-                node.parent = q
-                table.insert(neighbours, node)
-            end
-            if q.y < h then
-                local node = Node(q.x + 1, q.y + 1)
-                node.parent = q
-                table.insert(neighbours, node)
-            end
         end
 
         -- try straight up and down
@@ -169,7 +118,33 @@ function Pathfinder.findPath(sx, sy, tx, ty)
             table.insert(neighbours, node)
         end
 
+        -- diagonal left
+        if tryLeft then
+            if q.y > 1 then
+                local node = Node(q.x - 1, q.y - 1)
+                node.parent = q
+                table.insert(neighbours, node)
+            end
+            if q.y < h then
+                local node = Node(q.x - 1, q.y + 1)
+                node.parent = q
+                table.insert(neighbours, node)
+            end
+        end
 
+        -- diagonal right
+        if tryRight then
+            if q.y > 1 then
+                local node = Node(q.x + 1, q.y - 1)
+                node.parent = q
+                table.insert(neighbours, node)
+            end
+            if q.y < h then
+                local node = Node(q.x + 1, q.y + 1)
+                node.parent = q
+                table.insert(neighbours, node)
+            end
+        end
         for k, v in pairs(neighbours) do
             if isGoal(v.x, v.y, tx, ty) then
                 if tiles[tx * h + ty-1].walkable then
@@ -179,10 +154,8 @@ function Pathfinder.findPath(sx, sy, tx, ty)
                 end
             end
             v.g = tiles[v.x * h + v.y-1].moveCost + v.parent.g
-            if (isDiagonal(q.x, q.y, v.x, v.y)) then v.g = v.g end
             v.h = heuristic(v.x, v.y, tx, ty)
             v.f = v.g + v.h
-
             if not contains(closed, v) then
                 if not contains(open, v) then
                     table.insert(open, v)
