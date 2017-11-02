@@ -30,34 +30,10 @@ local function heuristic(nx, ny, gx, gy)
 end
 
 local function contains(t, node)
-    -- for k,v in pairs(t) do
-    --     if v.x == node.x and v.y == node.y then return true end
-    -- end
-    -- return false
     for i = 1, #t do
         if t[i].x == node.x and t[i].y == node.y then return true end
     end
     return false
-end
-
-local function smoothPath(path)
-    local lastPointX, lastPointY = path[1].x, path[1].y
-    local dirX, dirY
-    local lastDirX, lastDirY
-    for i = 1, #path do
-        dirX, dirY = path[i].x - lastPointX, path[i].y - lastPointY
-        if dirX < 0 then dirX = -1 elseif dirX > 0 then dirX = 1 end
-        if dirY < 0 then dirY = -1 elseif dirY > 0 then dirY = 1 end
-        print(dirX, dirY)
-        print(lastDirX, lastDirY)
-        print(lastPointX, lastPointY)
-        print()
-        if dirX ~= 0 and dirY ~= 0 then
-            if dirX ~= lastDirX or dirY ~= lastDirY then print("turn") print() end
-        end
-        lastDirX, lastDirY = dirX, dirY
-        lastPointX, lastPointY = path[i].x, path[i].y
-    end
 end
 
 local function constructPath(target, discardTarget, closedList)
@@ -79,7 +55,6 @@ local function constructPath(target, discardTarget, closedList)
         table.remove(path, #path)
         Utils.reverse(path)
     end
-    smoothPath(path)
     return path, closedList
 end
 
