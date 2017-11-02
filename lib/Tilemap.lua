@@ -50,7 +50,7 @@ function Tilemap:new(sizeX, sizeY)
     self.sizeY = sizeY
     local curr
     local index = 1
-    for line in io.lines("maps/forest_tileLayer.csv") do
+    for line in io.lines("maps/demo.csv") do
         curr = Utils.ParseCSVLine(line)
 
         for x = 1, sizeX do

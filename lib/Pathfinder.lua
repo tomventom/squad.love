@@ -40,6 +40,26 @@ local function contains(t, node)
     return false
 end
 
+local function smoothPath(path)
+    local lastPointX, lastPointY = path[1].x, path[1].y
+    local dirX, dirY
+    local lastDirX, lastDirY
+    for i = 1, #path do
+        dirX, dirY = path[i].x - lastPointX, path[i].y - lastPointY
+        if dirX < 0 then dirX = -1 elseif dirX > 0 then dirX = 1 end
+        if dirY < 0 then dirY = -1 elseif dirY > 0 then dirY = 1 end
+        print(dirX, dirY)
+        print(lastDirX, lastDirY)
+        print(lastPointX, lastPointY)
+        print()
+        if dirX ~= 0 and dirY ~= 0 then
+            if dirX ~= lastDirX or dirY ~= lastDirY then print("turn") print() end
+        end
+        lastDirX, lastDirY = dirX, dirY
+        lastPointX, lastPointY = path[i].x, path[i].y
+    end
+end
+
 local function constructPath(target, discardTarget, closedList)
     local path = {}
     if target.parent then
@@ -59,12 +79,82 @@ local function constructPath(target, discardTarget, closedList)
         table.remove(path, #path)
         Utils.reverse(path)
     end
+    smoothPath(path)
     return path, closedList
+end
+
+local function getNeighbours(q)
+    local neighbours = {}
+    local tryLeft = false
+    -- try left
+    if q.x > 1 then
+        tryLeft = true
+        local node = Node(q.x - 1, q.y)
+        node.parent = q
+        table.insert(neighbours, node)
+    end
+
+    local tryRight = false
+    -- try right
+    if q.x < w then
+        tryRight = true
+        local node = Node(q.x + 1, q.y)
+        node.parent = q
+        table.insert(neighbours, node)
+    end
+
+    -- try straight up and down
+    if q.y > 1 then
+        local node = Node(q.x, q.y - 1)
+        node.parent = q
+        table.insert(neighbours, node)
+    end
+    if q.y < h then
+        local node = Node(q.x, q.y + 1)
+        node.parent = q
+        table.insert(neighbours, node)
+    end
+
+    -- diagonal left
+    if tryLeft then
+        if q.y > 1 then
+            local node = Node(q.x - 1, q.y - 1)
+            node.parent = q
+            table.insert(neighbours, node)
+        end
+        if q.y < h then
+            local node = Node(q.x - 1, q.y + 1)
+            node.parent = q
+            table.insert(neighbours, node)
+        end
+    end
+
+    -- diagonal right
+    if tryRight then
+        if q.y > 1 then
+            local node = Node(q.x + 1, q.y - 1)
+            node.parent = q
+            table.insert(neighbours, node)
+        end
+        if q.y < h then
+            local node = Node(q.x + 1, q.y + 1)
+            node.parent = q
+            table.insert(neighbours, node)
+        end
+    end
+    return neighbours
 end
 
 function Pathfinder:findPath(sx, sy, tx, ty)
 
-    if not self.tiles[tx * h + ty-1].walkable then return end
+    if not self.tiles[tx * h + ty - 1].walkable then
+        local ns = getNeighbours(Node(tx, ty))
+        local surrounded = true
+        for k, v in pairs(ns) do
+            if self.tiles[v.x * h + v.y - 1].walkable then surrounded = false end
+        end
+        if surrounded == true then return end
+    end
 
     local open = {}
     local closed = {}
@@ -83,83 +173,27 @@ function Pathfinder:findPath(sx, sy, tx, ty)
         end
         table.remove(open, index)
         table.insert(closed, q)
+        if #closed >= 1600 then print("ERROR: took too long to compute path") return end
         if not q then print("no path") return end
         if q.x == tx and q.y == ty then print("already on source tile") return end
 
-        local neighbours = {}
-        local tryLeft = false
-        -- try left
-        if q.x > 1 then
-            tryLeft = true
-            local node = Node(q.x - 1, q.y)
-            node.parent = q
-            table.insert(neighbours, node)
-        end
-
-        local tryRight = false
-        -- try right
-        if q.x < w then
-            tryRight = true
-            local node = Node(q.x + 1, q.y)
-            node.parent = q
-            table.insert(neighbours, node)
-        end
-
-        -- try straight up and down
-        if q.y > 1 then
-            local node = Node(q.x, q.y - 1)
-            node.parent = q
-            table.insert(neighbours, node)
-        end
-        if q.y < h then
-            local node = Node(q.x, q.y + 1)
-            node.parent = q
-            table.insert(neighbours, node)
-        end
-
-        -- diagonal left
-        if tryLeft then
-            if q.y > 1 then
-                local node = Node(q.x - 1, q.y - 1)
-                node.parent = q
-                table.insert(neighbours, node)
-            end
-            if q.y < h then
-                local node = Node(q.x - 1, q.y + 1)
-                node.parent = q
-                table.insert(neighbours, node)
-            end
-        end
-
-        -- diagonal right
-        if tryRight then
-            if q.y > 1 then
-                local node = Node(q.x + 1, q.y - 1)
-                node.parent = q
-                table.insert(neighbours, node)
-            end
-            if q.y < h then
-                local node = Node(q.x + 1, q.y + 1)
-                node.parent = q
-                table.insert(neighbours, node)
-            end
-        end
+        local neighbours = getNeighbours(q)
         for k, v in pairs(neighbours) do
             if isGoal(v.x, v.y, tx, ty) then
-                if self.tiles[tx * h + ty-1].walkable then
+                if self.tiles[tx * h + ty - 1].walkable then
                     return constructPath(v, false, closed)
                 else
                     return constructPath(v, true, closed)
                 end
             end
-            v.g = self.tiles[v.x * h + v.y-1].moveCost + v.parent.g
+            v.g = self.tiles[v.x * h + v.y - 1].moveCost + v.parent.g
             v.h = heuristic(v.x, v.y, tx, ty)
             v.f = v.g + v.h
             if not contains(closed, v) then
                 if not contains(open, v) then
                     table.insert(open, v)
                 else
-                    if q.g+1 < v.g then
+                    if q.g + 1 < v.g then
                         v.parent = q
                     end
                 end

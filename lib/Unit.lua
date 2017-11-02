@@ -14,15 +14,19 @@ function U:new(x, y)
     self.drawMe = false
     self.timer = 0
     self.index = 1
+    self.pathfinder = nil
     -- if self.saySomething then self:saySomething(...) end
 end
 
-function U:moveTo(x, y)
-    self.pos.x = x
-    self.pos.y = y
+local function fixPosition(self)
+    self.pos.x = Utils.round(self.pos.x)
+    self.pos.y = Utils.round(self.pos.y)
 end
 
-function U:move(path)
+function U:moveTo(x, y)
+    fixPosition(self)
+    local path = self.pathfinder:findPath(self.pos.x, self.pos.y, x, y)
+    if not path then return end
     if self.hasPath then
         self.index = 1
         self.path = path
@@ -33,10 +37,20 @@ function U:move(path)
     self.hasPath = true
 end
 
-function U:fixPosition()
-    self.pos.x = Utils.round(self.pos.x)
-    self.pos.y = Utils.round(self.pos.y)
+function U:move()
+    fixPosition(self)
+    local path = self.pathfinder:findPath(self.pos.x, self.pos.y, love.math.random(5, 59), love.math.random(5, 59))
+    if not path then return end
+    if self.hasPath then
+        self.index = 1
+        self.path = path
+        return
+    end
+    self.drawMe = true
+    self.path = path
+    self.hasPath = true
 end
+
 
 function U:update(dt)
     self.timer = self.timer + dt
@@ -57,13 +71,13 @@ end
 
 function U:draw()
     love.graphics.draw(Tileset, Quads[4], self.pos.x * 32 - 32, self.pos.y * 32 - 32)
-    -- if draw and self.path then
-    --     love.graphics.setColor(0, 0, 0, 255)
-    --     for k, v in pairs(self.path) do
-    --         love.graphics.rectangle("line", v.x * 32 - 32, v.y * 32 - 32, 32, 32)
-    --     end
-    --     love.graphics.setColor(255, 255, 255, 255)
-    -- end
+    if self.drawMe and self.path then
+        love.graphics.setColor(0, 0, 0, 255)
+        for k, v in pairs(self.path) do
+            love.graphics.rectangle("line", v.x * 32 - 32, v.y * 32 - 32, 32, 32)
+        end
+        love.graphics.setColor(255, 255, 255, 255)
+    end
 end
 
 return U
