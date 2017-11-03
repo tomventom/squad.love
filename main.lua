@@ -1,6 +1,5 @@
 Gamestate = require("hump.gamestate")
 Utils = require("lib.Utils")
-Suit = require("SUIT")
 local Events = require("lib.Events")
 Menu = require("states.Menu")
 Game = require("states.Game")

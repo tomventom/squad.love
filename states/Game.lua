@@ -99,15 +99,7 @@ function Game:update(dt)
     if dt > 0.04 then return end
     self.em:update(dt)
     Timer.update(dt)
-    -- if Suit.Button("End Turn", windowWidth-160, windowHeight-60, 160,60).hit then
-    -- if not turnButtonClicked then
-    --     turnButtonClicked = true
-    --     for i = 1, #units do
-    --         units[i]:moveToNextTile()
-    --     end
-    --     Timer.after(2, function() turnButtonClicked = false end)
-    -- end
-    -- end
+    
     for i = 1, #units do
         units[i]:update(dt)
     end
