@@ -16,9 +16,11 @@ local Label = require("lib.ui.Label")
 local Slider = require("lib.ui.Slider")
 local TextField = require("lib.ui.TextField")
 
-Tileset = love.graphics.newImage("assets/tileset.png")
+Tileset = love.graphics.newImage("assets/tilesetnogrid.png")
 local tw = Tileset:getWidth()
 local th = Tileset:getHeight()
+
+TmapSizeX, TmapSizeY = 40, 20
 
 -- Quads contains the seperate tile sprites
 Quads = {}
@@ -33,7 +35,8 @@ Quads[7] = love.graphics.newQuad(0, 64, 32, 32, tw, th) -- selected
 
 Quads[99] = love.graphics.newQuad(96, 64, 32, 32, tw, th) -- empty
 
-local tmap = Tilemap(64, 64)
+local tmap = Tilemap(TmapSizeX, TmapSizeY)
+GlobalMap = {}
 local mx, my = 0, 0
 local tx, ty = 0, 0
 local drawMousePos = false
@@ -42,7 +45,7 @@ local selected
 
 local dragging = false
 local dragX, dragY = 0, 0
-local camX, camY, camZoom = 0, 0, .5
+local camX, camY, camZoom = 0, 0, 1
 
 
 -- initialize the map, unit and camera
@@ -55,10 +58,11 @@ function Game:init()
     self.em:add(self.endTurnButton)
     self.buttonClick = function(button) self:onClick(button) end
 
-    for i = 1, 11 do
+    for i = 1, 2 do
         units[i] = Pawn(i * 5, 5)
-        units[i].pathfinder = Pathfinder(tmap, 64, 64)
+        units[i].pathfinder = Pathfinder(tmap, TmapSizeX, TmapSizeY)
     end
+    GlobalMap = tmap:getTileGrid()
     -- unit = Pawn(60, 5)
     camera = Camera(256, 192, camZoom)
 end
@@ -80,7 +84,7 @@ function Game:onClick(button)
             for i = 1, #units do
                 units[i]:moveToNextTile()
             end
-            Timer.after(1.1, function() button:enabled(true) end)
+            Timer.after(1, function() button:enabled(true) end)
         end
     end
 end
@@ -99,7 +103,7 @@ function Game:update(dt)
     if dt > 0.04 then return end
     self.em:update(dt)
     Timer.update(dt)
-    
+
     for i = 1, #units do
         units[i]:update(dt)
     end

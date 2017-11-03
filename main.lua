@@ -9,7 +9,7 @@ flux = require("lib.flux")
 
 function love.load()
     love.graphics.setDefaultFilter("nearest", "nearest")
-
+    love.graphics.setLineWidth(3)
     _G.events = Events(false)
 
     Gamestate.registerEvents()

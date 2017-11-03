@@ -120,8 +120,9 @@ local function getNeighbours(q)
     return neighbours
 end
 
-function Pathfinder:findPath(sx, sy, tx, ty)
-
+function Pathfinder:findPath(sx, sy, tx, ty, blockedTile)
+    local blocked = blockedTile
+    if not blocked then print("null") else print("yes") end
     if not self.tiles[tx * h + ty - 1].walkable then
         local ns = getNeighbours(Node(tx, ty))
         local surrounded = true
@@ -165,6 +166,7 @@ function Pathfinder:findPath(sx, sy, tx, ty)
             v.h = heuristic(v.x, v.y, tx, ty)
             v.f = v.g + v.h
             v.cost = self.tiles[v.x * h + v.y - 1].moveCost
+            if blocked then if v.x == blocked.x and v.y == blocked.y then table.insert(closed, v) end end
             if not contains(closed, v) then
                 if not contains(open, v) then
                     table.insert(open, v)

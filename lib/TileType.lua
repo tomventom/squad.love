@@ -9,6 +9,7 @@ function TT:new(name, quad, moveCost, walkable)
     self.h = 32
     self.moveCost = moveCost
     self.walkable = (walkable == nil) or walkable
+    self.occupied = false
 end
 
 return TT

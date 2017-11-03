@@ -2,21 +2,6 @@ local Class = require("lib.Class")
 local TileType = require("lib.TileType")
 local Tilemap = Class:derive("Tilemap")
 
-local function clone(t)
-    if type(t) ~= "table" then return t end
-    local meta = getmetatable(t)
-    local target = {}
-    for k, v in pairs(t) do
-        if type(v) == "table" then
-            target[k] = clone(v)
-        else
-            target[k] = v
-        end
-    end
-    setmetatable(target, meta)
-    return target
-end
-
 local function stringToTileType(self, string)
     if string == "grass" then
         return self.grassTile
@@ -50,7 +35,7 @@ function Tilemap:new(sizeX, sizeY)
     self.sizeY = sizeY
     local curr
     local index = 1
-    for line in io.lines("maps/demo.csv") do
+    for line in io.lines("maps/ambush1_tileLayer.csv") do
         curr = Utils.ParseCSVLine(line)
 
         for x = 1, sizeX do
@@ -59,7 +44,7 @@ function Tilemap:new(sizeX, sizeY)
         index = index + 1
     end
     index = 1
-    for line in io.lines("maps/forest_objLayer.csv") do
+    for line in io.lines("maps/ambush1_objLayer.csv") do
         curr = Utils.ParseCSVLine(line)
 
         for x = 1, sizeX do
@@ -96,7 +81,7 @@ function Tilemap:isTileWalkable(tx, ty)
 end
 
 function Tilemap:getTileGrid()
-    local copy = clone(self.tiles)
+    local copy = Utils.clone(self.tiles)
     for x = 1, self.sizeX do
         for y = 1, self.sizeY do
             copy[x * self.sizeY + y - 1].moveCost = copy[x * self.sizeY + y - 1].moveCost + self.objLayer[x * self.sizeY + y - 1].moveCost

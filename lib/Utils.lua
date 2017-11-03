@@ -47,7 +47,7 @@ function U.min(t)
   return min
 end
 
-function U.ParseCSVLine (line,sep) 
+function U.ParseCSVLine (line,sep)
 	local res = {}
 	local pos = 1
 	sep = sep or ','
@@ -85,6 +85,21 @@ function U.ParseCSVLine (line,sep)
 		end
 	end
 	return res
+end
+
+function U.clone(t)
+    if type(t) ~= "table" then return t end
+    local meta = getmetatable(t)
+    local target = {}
+    for k, v in pairs(t) do
+        if type(v) == "table" then
+            target[k] = U.clone(v)
+        else
+            target[k] = v
+        end
+    end
+    setmetatable(target, meta)
+    return target
 end
 
 return U
