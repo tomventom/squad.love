@@ -164,6 +164,7 @@ function Pathfinder:findPath(sx, sy, tx, ty)
             v.g = self.tiles[v.x * h + v.y - 1].moveCost + v.parent.g
             v.h = heuristic(v.x, v.y, tx, ty)
             v.f = v.g + v.h
+            v.cost = self.tiles[v.x * h + v.y - 1].moveCost
             if not contains(closed, v) then
                 if not contains(open, v) then
                     table.insert(open, v)

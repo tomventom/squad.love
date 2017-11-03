@@ -1,15 +1,20 @@
 Gamestate = require("hump.gamestate")
 Utils = require("lib.Utils")
-
+Suit = require("SUIT")
+local Events = require("lib.Events")
 Menu = require("states.Menu")
 Game = require("states.Game")
 
+Timer = require("hump.timer")
 flux = require("lib.flux")
 
 function love.load()
     love.graphics.setDefaultFilter("nearest", "nearest")
+
+    _G.events = Events(false)
+
     Gamestate.registerEvents()
-    Gamestate.switch(Game)
+    Gamestate.switch(Menu)
 end
 
 function love.update(dt)

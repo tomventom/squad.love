@@ -38,7 +38,7 @@ function Tilemap:new(sizeX, sizeY)
     -- initialize tiles with a name and sprite index from Quads table
     self.grassTile = TileType("grass", 1, 1)
     self.sandTile = TileType("sand", 5, 1)
-    self.swampTile = TileType("swamp", 2, 4)
+    self.swampTile = TileType("swamp", 2, 2)
     self.waterTile = TileType("water", 3, math.huge, false)
     self.empty = TileType("empty", 99, 0)
     self.tree = TileType("tree", 6, math.huge, false)
