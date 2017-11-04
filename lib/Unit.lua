@@ -12,7 +12,6 @@ function U:new(x, y)
     self.hasPath = false
     self.path = nil
     self.currentPath = nil
-    self.stepsTaken = 1
     self.drawMe = false
     self.timer = 0
     self.pathfinder = nil
@@ -27,6 +26,7 @@ end
 
 local function checkNextTile(self)
     local nextTile = self.currentPath[1]
+    -- print(string.format("Next Tile: %d,%d", nextTile.x, nextTile.y))
     return GlobalMap[nextTile.x * TmapSizeY + nextTile.y - 1].occupied
 end
 
@@ -47,14 +47,12 @@ function U:moveTo(x, y, blocked)
     if self.hasPath then
         self.path = path
         self.currentPath = Utils.clone(self.path)
-        self.stepsTaken = 1
         return
     end
     -- self.drawMe = true
     self.path = path
     self.hasPath = true
     self.currentPath = Utils.clone(self.path)
-    self.stepsTaken = 1
 end
 
 function U:moveAtRandom()
@@ -64,13 +62,11 @@ function U:moveAtRandom()
     if self.hasPath then
         self.path = path
         self.currentPath = Utils.clone(self.path)
-        self.stepsTaken = 1
         return
     end
     -- self.drawMe = true
     self.path = path
     self.currentPath = Utils.clone(self.path)
-    self.stepsTaken = 1
     self.hasPath = true
 end
 
@@ -79,7 +75,6 @@ local function sequenceTween(self)
     if #self.currentPath == 0 then return end
     -- uncomment this for non turn-based movement
     self.remainingSpeed = #self.currentPath
-    print(self.remainingSpeed)
 
     if checkNextTile(self) then
         self.tweening = false
@@ -89,7 +84,6 @@ local function sequenceTween(self)
         if #self.currentPath == 1 then self.path = nil return end
     end
 
-    -- tell the Global Map the tile we're on is occupied
     GlobalMap[self.lastposX * TmapSizeY + self.lastposY - 1].occupied = false
     GlobalMap[self.currentPath[1].x * TmapSizeY + self.currentPath[1].y - 1].occupied = true
 
@@ -97,8 +91,7 @@ local function sequenceTween(self)
     -- self.pos.x, self.pos.y = self.currentPath[1].x, self.currentPath[1].y
         self.remainingSpeed = self.remainingSpeed - self.currentPath[1].cost
         table.remove(self.currentPath, 1)
-        self.stepsTaken = self.stepsTaken + 1
-
+        -- print(string.format("lastPos: %d,%d. pos: %d,%d", self.lastposX, self.lastposY, self.pos.x, self.pos.y))
         self.lastposX, self.lastposY = self.pos.x, self.pos.y
 
         self.tweening = false
@@ -115,7 +108,6 @@ end
 function U:moveToNextTile()
     self.remainingSpeed = self.moveSpeed
     if not self.path then return end
-    if not self.hasPath then self.stepsTaken = 1 return end
     if not self.tweening then
         if #self.currentPath == 0 then return end
         if #self.currentPath == 1 then

@@ -3,7 +3,7 @@ local Game = {}
 
 local Camera = require("hump.camera")
 local Tilemap = require("lib.Tilemap")
-local Unit = require("lib.Unit")
+-- local Unit = require("lib.Unit")
 local Pawn = require("lib.Pawn")
 local Pathfinder = require("lib.Pathfinder")
 
