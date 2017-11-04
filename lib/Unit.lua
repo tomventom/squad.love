@@ -40,6 +40,7 @@ local function fixPosition(self)
 end
 
 function U:moveTo(x, y, blocked)
+    if self.tweening then return end
     fixPosition(self)
     local path = self.pathfinder:findPath(self.pos.x, self.pos.y, x, y, blocked)
     if not path then self.path = nil return end
@@ -77,14 +78,15 @@ local function sequenceTween(self)
     self.tweening = true
     if #self.currentPath == 0 then return end
     -- uncomment this for non turn-based movement
-    -- self.remainingSpeed = #self.currentPath
+    self.remainingSpeed = #self.currentPath
+    print(self.remainingSpeed)
 
     if checkNextTile(self) then
         self.tweening = false
         self:moveTo(self.path[#self.path].x, self.path[#self.path].y, true)
         if not self.path then return end
         if self.remainingSpeed < 1 then return end
-        if #self.currentPath == 1 then return end
+        if #self.currentPath == 1 then self.path = nil return end
     end
 
     -- tell the Global Map the tile we're on is occupied
@@ -101,7 +103,6 @@ local function sequenceTween(self)
 
         self.tweening = false
         if #self.currentPath > 0 and checkNextTile(self) then
-            -- self.tweening = false
             self:moveTo(self.path[#self.path].x, self.path[#self.path].y, true)
             if not self.path then return end
             if self.remainingSpeed < 1 then return end
