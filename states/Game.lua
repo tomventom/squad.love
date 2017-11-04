@@ -57,12 +57,12 @@ function Game:init()
     self.endTurnButton:setTextColors(Utils.grey(0), Utils.grey(60))
     self.em:add(self.endTurnButton)
     self.buttonClick = function(button) self:onClick(button) end
+    GlobalMap = tmap:getTileGrid()
 
-    for i = 1, 2 do
+    for i = 1, 4 do
         units[i] = Pawn(i * 5, 5)
         units[i].pathfinder = Pathfinder(tmap, TmapSizeX, TmapSizeY)
     end
-    GlobalMap = tmap:getTileGrid()
     -- unit = Pawn(60, 5)
     camera = Camera(256, 192, camZoom)
 end
@@ -84,7 +84,12 @@ function Game:onClick(button)
             for i = 1, #units do
                 units[i]:moveToNextTile()
             end
-            Timer.after(1, function() button:enabled(true) end)
+            Timer.after(1, function()
+                -- for i = 1, #units do
+                --     units[i]:confirmPosition()
+                -- end
+                button:enabled(true)
+            end)
         end
     end
 end
@@ -98,7 +103,6 @@ function love.wheelmoved(x, y)
     camera:zoomTo(camZoom)
 end
 
--- local turnButtonClicked = false
 function Game:update(dt)
     if dt > 0.04 then return end
     self.em:update(dt)
@@ -112,7 +116,6 @@ function Game:update(dt)
         camera.x = camera.x + dragX - mx
         camera.y = camera.y + dragY - my
     end
-    -- camera:lockPosition(unit.pos.x * 32 - 32, unit.pos.y * 32 - 32, Camera.smooth.damped(4))
     if love.keyboard.isDown("w") then camY = -1 elseif love.keyboard.isDown("s") then camY = 1 end
     if love.keyboard.isDown("a") then camX = -1 elseif love.keyboard.isDown("d") then camX = 1 end
     camera:move(camX * 400 * dt, camY * 400 * dt)
@@ -168,6 +171,7 @@ function Game:mousereleased(x, y, key)
     -- if a tile was clicked, move the unit to it
     if key == 2 and tx ~= 0 and ty ~= 0 and selected then
         selected:moveTo(tx, ty)
+        selected:moveToNextTile()
     end
     if key == 1 then
         if selected then deselectUnit() end

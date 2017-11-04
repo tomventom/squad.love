@@ -21,12 +21,18 @@ function U:new(x, y)
     self.remainingSpeed = 0
     self.tweening = false
     self.lastposX, self.lastposY = x, y
+    GlobalMap[self.pos.x * TmapSizeY + self.pos.y - 1].occupied = true
+
     -- if self.saySomething then self:saySomething(...) end
 end
 
 local function checkNextTile(self)
     local nextTile = self.currentPath[1]
     return GlobalMap[nextTile.x * TmapSizeY + nextTile.y - 1].occupied
+end
+
+function U:confirmPosition()
+    GlobalMap[self.pos.x * TmapSizeY + self.pos.y - 1].occupied = true
 end
 
 local function fixPosition(self)
@@ -37,7 +43,7 @@ end
 function U:moveTo(x, y, blocked)
     fixPosition(self)
     local path = self.pathfinder:findPath(self.pos.x, self.pos.y, x, y, blocked)
-    if not path then return end
+    if not path then self.path = nil return end
     if self.hasPath then
         self.index = 1
         self.path = path
@@ -73,27 +79,35 @@ end
 local function sequenceTween(self)
     self.tweening = true
     if #self.currentPath == 0 then return end
-    -- if checkNextTile(self) then
-    --     self.tweening = false
-    --     self:moveTo(self.path[#self.path].x, self.path[#self.path].y, {x = self.currentPath[1].x, y = self.currentPath[1].y})
-    --     return
-    -- end
+    -- uncomment this for non turn-based movement
+    self.remainingSpeed = #self.currentPath
 
-    flux.to(self.pos, speed, {x = self.currentPath[1].x, y = self.currentPath[1].y}):delay(speed):oncomplete(function()
+    if checkNextTile(self) then
+        self.tweening = false
+        self:moveTo(self.path[#self.path].x, self.path[#self.path].y, true)
+        if not self.path then return end
+        if self.remainingSpeed < 1 then return end
+        if #self.currentPath == 1 then return end
+    end
+
+    -- tell the Global Map the tile we're on is occupied
+    GlobalMap[self.lastposX * TmapSizeY + self.lastposY - 1].occupied = false
+    GlobalMap[self.currentPath[1].x * TmapSizeY + self.currentPath[1].y - 1].occupied = true
+
+    flux.to(self.pos, speed, {x = self.currentPath[1].x, y = self.currentPath[1].y}):oncomplete(function()
+    -- self.pos.x, self.pos.y = self.currentPath[1].x, self.currentPath[1].y
         self.remainingSpeed = self.remainingSpeed - self.currentPath[1].cost
         table.remove(self.currentPath, 1)
         self.stepsTaken = self.stepsTaken + 1
 
-        -- tell the Global Map the tile we're on is occupied
-        GlobalMap[self.lastposX * TmapSizeY + self.lastposY - 1].occupied = false
         self.lastposX, self.lastposY = self.pos.x, self.pos.y
-        GlobalMap[self.pos.x * TmapSizeY + self.pos.y - 1].occupied = true
 
         self.tweening = false
         if #self.currentPath > 0 and checkNextTile(self) then
             -- self.tweening = false
-            self:moveTo(self.path[#self.path].x, self.path[#self.path].y, {x = self.currentPath[1].x, y = self.currentPath[1].y})
-            if self.remainingSpeed == 0 then return end
+            self:moveTo(self.path[#self.path].x, self.path[#self.path].y, true)
+            if not self.path then return end
+            if self.remainingSpeed < 1 then return end
         end
         if self.remainingSpeed > 0 then sequenceTween(self) end
     end)
@@ -102,6 +116,7 @@ end
 
 function U:moveToNextTile()
     self.remainingSpeed = self.moveSpeed
+    if not self.path then return end
     if not self.hasPath then self.stepsTaken = 1 return end
     if not self.tweening then
         if #self.currentPath == 0 then return end
@@ -109,7 +124,6 @@ function U:moveToNextTile()
             self.remainingSpeed = 1
             self.hasPath = false
         end
-        -- self.lastposX, self.lastposY = self.pos.x, self.pos.y
         sequenceTween(self)
     end
 end

@@ -122,7 +122,7 @@ end
 
 function Pathfinder:findPath(sx, sy, tx, ty, blockedTile)
     local blocked = blockedTile
-    if not blocked then print("null") else print("yes") end
+    -- if blocked then print("blocked") end
     if not self.tiles[tx * h + ty - 1].walkable then
         local ns = getNeighbours(Node(tx, ty))
         local surrounded = true
@@ -154,6 +154,15 @@ function Pathfinder:findPath(sx, sy, tx, ty, blockedTile)
         if q.x == tx and q.y == ty then print("already on source tile") return end
 
         local neighbours = getNeighbours(q)
+        -- if blocked then
+        --     if q.x == sx and q.y == sy then
+        --         for k, v in pairs(neighbours) do
+        --             if GlobalMap[v.x * h + v.y - 1].occupied then
+        --                 table.insert(closed, v)
+        --             end
+        --         end
+        --     end
+        -- end
         for k, v in pairs(neighbours) do
             if isGoal(v.x, v.y, tx, ty) then
                 if self.tiles[tx * h + ty - 1].walkable then
@@ -166,7 +175,11 @@ function Pathfinder:findPath(sx, sy, tx, ty, blockedTile)
             v.h = heuristic(v.x, v.y, tx, ty)
             v.f = v.g + v.h
             v.cost = self.tiles[v.x * h + v.y - 1].moveCost
-            if blocked then if v.x == blocked.x and v.y == blocked.y then table.insert(closed, v) end end
+            if blocked then
+                if GlobalMap[v.x * h + v.y - 1].occupied then
+                    table.insert(closed, v)
+                end
+            end
             if not contains(closed, v) then
                 if not contains(open, v) then
                     table.insert(open, v)
