@@ -15,7 +15,6 @@ function U:new(x, y)
     self.stepsTaken = 1
     self.drawMe = false
     self.timer = 0
-    self.index = 1
     self.pathfinder = nil
     self.moveSpeed = 2
     self.remainingSpeed = 0
@@ -45,7 +44,6 @@ function U:moveTo(x, y, blocked)
     local path = self.pathfinder:findPath(self.pos.x, self.pos.y, x, y, blocked)
     if not path then self.path = nil return end
     if self.hasPath then
-        self.index = 1
         self.path = path
         self.currentPath = Utils.clone(self.path)
         self.stepsTaken = 1
@@ -60,10 +58,9 @@ end
 
 function U:moveAtRandom()
     fixPosition(self)
-    local path = self.pathfinder:findPath(self.pos.x, self.pos.y, love.math.random(5, 59), love.math.random(5, 59))
+    local path = self.pathfinder:findPath(self.pos.x, self.pos.y, love.math.random(1, 39), love.math.random(1, 19))
     if not path then return end
     if self.hasPath then
-        self.index = 1
         self.path = path
         self.currentPath = Utils.clone(self.path)
         self.stepsTaken = 1
@@ -80,7 +77,7 @@ local function sequenceTween(self)
     self.tweening = true
     if #self.currentPath == 0 then return end
     -- uncomment this for non turn-based movement
-    self.remainingSpeed = #self.currentPath
+    -- self.remainingSpeed = #self.currentPath
 
     if checkNextTile(self) then
         self.tweening = false

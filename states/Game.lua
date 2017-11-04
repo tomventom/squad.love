@@ -61,7 +61,7 @@ function Game:init()
 
     for i = 1, 4 do
         units[i] = Pawn(i * 5, 5)
-        units[i].pathfinder = Pathfinder(tmap, TmapSizeX, TmapSizeY)
+        units[i].pathfinder = Pathfinder(tmap)
     end
     -- unit = Pawn(60, 5)
     camera = Camera(256, 192, camZoom)
@@ -79,18 +79,11 @@ end
 
 function Game:onClick(button)
     if button.text == "End Turn" then
-        if not turnButtonClicked then
-            button:enabled(false)
-            for i = 1, #units do
-                units[i]:moveToNextTile()
-            end
-            Timer.after(1, function()
-                -- for i = 1, #units do
-                --     units[i]:confirmPosition()
-                -- end
-                button:enabled(true)
-            end)
+        button:enabled(false)
+        for i = 1, #units do
+            units[i]:moveToNextTile()
         end
+        Timer.after(.8, function() button:enabled(true) end)
     end
 end
 
@@ -166,12 +159,10 @@ end
 
 function Game:mousereleased(x, y, key)
     if key == 3 then dragging = false end
-    -- if self.endTurnButton.color == self.endTurnButton.pressed then return end
     if self.endTurnButton.inBounds then return end
     -- if a tile was clicked, move the unit to it
     if key == 2 and tx ~= 0 and ty ~= 0 and selected then
         selected:moveTo(tx, ty)
-        selected:moveToNextTile()
     end
     if key == 1 then
         if selected then deselectUnit() end

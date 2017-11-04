@@ -5,12 +5,8 @@ local Pathfinder = Class:derive("Pathfinder")
 
 local min, abs = math.min, math.abs
 local sqrt2 = math.sqrt(2)
-local w = 0
-local h = 0
 
-function Pathfinder:new(tilemap, width, height)
-    w = width
-    h = height
+function Pathfinder:new(tilemap)
     self.tiles = tilemap:getTileGrid()
 end
 
@@ -71,7 +67,7 @@ local function getNeighbours(q)
 
     local tryRight = false
     -- try right
-    if q.x < w then
+    if q.x < TmapSizeX then
         tryRight = true
         local node = Node(q.x + 1, q.y)
         node.parent = q
@@ -84,7 +80,7 @@ local function getNeighbours(q)
         node.parent = q
         table.insert(neighbours, node)
     end
-    if q.y < h then
+    if q.y < TmapSizeY then
         local node = Node(q.x, q.y + 1)
         node.parent = q
         table.insert(neighbours, node)
@@ -97,7 +93,7 @@ local function getNeighbours(q)
             node.parent = q
             table.insert(neighbours, node)
         end
-        if q.y < h then
+        if q.y < TmapSizeY then
             local node = Node(q.x - 1, q.y + 1)
             node.parent = q
             table.insert(neighbours, node)
@@ -111,7 +107,7 @@ local function getNeighbours(q)
             node.parent = q
             table.insert(neighbours, node)
         end
-        if q.y < h then
+        if q.y < TmapSizeY then
             local node = Node(q.x + 1, q.y + 1)
             node.parent = q
             table.insert(neighbours, node)
@@ -123,11 +119,11 @@ end
 function Pathfinder:findPath(sx, sy, tx, ty, blockedTile)
     local blocked = blockedTile
     -- if blocked then print("blocked") end
-    if not self.tiles[tx * h + ty - 1].walkable then
+    if not self.tiles[tx * TmapSizeY + ty - 1].walkable then
         local ns = getNeighbours(Node(tx, ty))
         local surrounded = true
         for k, v in pairs(ns) do
-            if self.tiles[v.x * h + v.y - 1].walkable then surrounded = false end
+            if self.tiles[v.x * TmapSizeY + v.y - 1].walkable then surrounded = false end
         end
         if surrounded == true then return end
     end
@@ -157,7 +153,7 @@ function Pathfinder:findPath(sx, sy, tx, ty, blockedTile)
         -- if blocked then
         --     if q.x == sx and q.y == sy then
         --         for k, v in pairs(neighbours) do
-        --             if GlobalMap[v.x * h + v.y - 1].occupied then
+        --             if GlobalMap[v.x * TmapSizeY + v.y - 1].occupied then
         --                 table.insert(closed, v)
         --             end
         --         end
@@ -165,18 +161,18 @@ function Pathfinder:findPath(sx, sy, tx, ty, blockedTile)
         -- end
         for k, v in pairs(neighbours) do
             if isGoal(v.x, v.y, tx, ty) then
-                if self.tiles[tx * h + ty - 1].walkable then
+                if self.tiles[tx * TmapSizeY + ty - 1].walkable then
                     return constructPath(v, false, closed)
                 else
                     return constructPath(v, true, closed)
                 end
             end
-            v.g = self.tiles[v.x * h + v.y - 1].moveCost + v.parent.g
+            v.g = self.tiles[v.x * TmapSizeY + v.y - 1].moveCost + v.parent.g
             v.h = heuristic(v.x, v.y, tx, ty)
             v.f = v.g + v.h
-            v.cost = self.tiles[v.x * h + v.y - 1].moveCost
+            v.cost = self.tiles[v.x * TmapSizeY + v.y - 1].moveCost
             if blocked then
-                if GlobalMap[v.x * h + v.y - 1].occupied then
+                if GlobalMap[v.x * TmapSizeY + v.y - 1].occupied then
                     table.insert(closed, v)
                 end
             end
