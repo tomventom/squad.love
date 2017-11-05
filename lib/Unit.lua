@@ -14,7 +14,7 @@ function U:new(id, x, y)
     self.pathfinder = nil
     self.path = nil
     self.currentPath = nil
-    self.moveSpeed = 2
+    self.moveSpeed = 1
     self.remainingSpeed = self.moveSpeed
     self.tweening = false
     self.lastposX, self.lastposY = x, y
@@ -46,13 +46,7 @@ local function movingToMyPos(self)
     local u = UnitMap[nextTile.x * TmapSizeY + nextTile.y - 1]
     if u and u.currentPath then
         if #u.currentPath > 0 then
-            if u.currentPath[1].x == self.pos.x and u.currentPath[1].y == self.pos.y then
-                return true
-            elseif u.currentPath[1].x == self.currentPath[1].x and u.currentPath[1].y == self.currentPath[1].y then
-                return true
-            else
-                return false
-            end
+            return u.currentPath[1].x == self.pos.x and u.currentPath[1].y == self.pos.y
         elseif #u.currentPath <= 0 then
             return true
         end
@@ -89,7 +83,7 @@ function U:moveTo(x, y, blocked)
 end
 
 local function sequenceTween(self)
-    flux.to(self.pos, speed, {x = self.currentPath[1].x, y = self.currentPath[1].y}):oncomplete(function()
+    flux.to(self.pos, 1, {x = self.currentPath[1].x, y = self.currentPath[1].y}):oncomplete(function()
         self.remainingSpeed = self.remainingSpeed - self.currentPath[1].cost
         table.remove(self.currentPath, 1)
         self.lastposX, self.lastposY = self.pos.x, self.pos.y
@@ -98,7 +92,9 @@ end
 
 -- Move to the next tile/s on the current path
 function U:moveToNextTile()
-    print(self.id)
+    -- print(self.id)
+    UnitMap[self.pos.x * TmapSizeY + self.pos.y - 1] = self
+
     if not self.path then return end
     if self.tweening then return end
 
@@ -112,8 +108,8 @@ function U:moveToNextTile()
     end
 
     -- If the next tile is blocked, recalc path
+    if movingToTheSamePos(self) then return end
     if movingToMyPos(self) then
-        if movingToTheSamePos(self) then return end
         self:moveTo(self.path[#self.path].x, self.path[#self.path].y, true)
         if not self.path then return end
         if self.remainingSpeed < 1 then return end
@@ -124,10 +120,11 @@ function U:moveToNextTile()
 
     UnitMap[self.lastposX * TmapSizeY + self.lastposY - 1] = nil
 
-    sequenceTween(self)
     UnitMap[self.currentPath[1].x * TmapSizeY + self.currentPath[1].y - 1] = self
+    print(string.format("ID: %d \nLast Pos: %d,%d is now nil \nNext Pos: %d,%d is now self \n======", self.id, self.lastposX, self.lastposY, self.currentPath[1].x, self.currentPath[1].y))
+    sequenceTween(self)
 
-    Timer.after(.4, function()
+    Timer.after(2, function()
         self.tweening = false
         -- If the unit still has speed, keep going
         if self.remainingSpeed > 0 then

@@ -61,11 +61,20 @@ function Game:init()
     GlobalMap = tmap:getTileGrid()
     UnitMap = {}
 
-    for i = 1, 4 do
-        local p = Unit(tostring(i), i * 5, 5)
+    -- for i = 1, 4 do
+        local p = Unit(tostring(1), 15, 8)
         p.pathfinder = Pathfinder(tmap)
         self.em:add(p)
-    end
+        local p = Unit(tostring(2), 16, 7)
+        p.pathfinder = Pathfinder(tmap)
+        self.em:add(p)
+        local p = Unit(tostring(3), 17, 8)
+        p.pathfinder = Pathfinder(tmap)
+        self.em:add(p)
+        local p = Unit(tostring(4), 16, 9)
+        p.pathfinder = Pathfinder(tmap)
+        self.em:add(p)
+    -- end
     -- unit = Pawn(60, 5)
     camera = Camera(256, 192, camZoom)
 end
@@ -172,7 +181,12 @@ function Game:draw()
 
     self.em:draw()
     if selected then love.graphics.draw(Tileset, Quads[7], selected.pos.x * 32 - 32, selected.pos.y * 32 - 32) end
-    if drawMousePos then love.graphics.rectangle("line", tx * 32 - 32, ty * 32 - 32, 32, 32) end
+    if drawMousePos then
+        love.graphics.rectangle("line", tx * 32 - 32, ty * 32 - 32, 32, 32)
+        love.graphics.setColor(0, 0, 0)
+        love.graphics.print(tx .. ", " .. ty, mx + 10, my - 10)
+        love.graphics.setColor(255, 255, 255)
+    end
     camera:detach()
     self.uiMgr:draw()
 end
