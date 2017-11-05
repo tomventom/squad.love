@@ -17,7 +17,10 @@ function love.load()
 end
 
 function love.update(dt)
+    if not love.window.hasMouseFocus() then return end
+    Timer.update(dt)
     flux.update(dt)
+
 end
 
 function love.draw()

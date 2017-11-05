@@ -4,7 +4,7 @@ local Game = {}
 local Camera = require("hump.camera")
 local Tilemap = require("lib.Tilemap")
 -- local Unit = require("lib.Unit")
-local Pawn = require("lib.Pawn")
+local Unit = require("lib.Unit")
 local Pathfinder = require("lib.Pathfinder")
 
 local sw = love.graphics.getWidth()
@@ -17,6 +17,7 @@ local Slider = require("lib.ui.Slider")
 local TextField = require("lib.ui.TextField")
 
 Tileset = love.graphics.newImage("assets/tilesetnogrid.png")
+local mapImage = love.graphics.newImage("maps/ambush1.png")
 local tw = Tileset:getWidth()
 local th = Tileset:getHeight()
 
@@ -35,12 +36,11 @@ Quads[7] = love.graphics.newQuad(0, 64, 32, 32, tw, th) -- selected
 
 Quads[99] = love.graphics.newQuad(96, 64, 32, 32, tw, th) -- empty
 
-local tmap = Tilemap(TmapSizeX, TmapSizeY)
+local tmap = Tilemap(TmapSizeX, TmapSizeY, mapImage)
 GlobalMap = {}
 local mx, my = 0, 0
 local tx, ty = 0, 0
 local drawMousePos = false
-local units = {}
 local selected
 
 local dragging = false
@@ -50,29 +50,33 @@ local camX, camY, camZoom = 0, 0, 1
 
 -- initialize the map, unit and camera
 function Game:init()
+    self.uiMgr = EntityMgr()
     self.em = EntityMgr()
 
     self.endTurnButton = Button(sw - 100, sh - 40, 160, 60, "End Turn")
     self.endTurnButton:setButtonColors(Utils.grey(200, 160), Utils.grey(200, 200), Utils.grey(240))
     self.endTurnButton:setTextColors(Utils.grey(0), Utils.grey(60))
-    self.em:add(self.endTurnButton)
+    self.uiMgr:add(self.endTurnButton)
     self.buttonClick = function(button) self:onClick(button) end
     GlobalMap = tmap:getTileGrid()
 
     for i = 1, 4 do
-        units[i] = Pawn(i * 5, 5)
-        units[i].pathfinder = Pathfinder(tmap)
+        local p = Unit(tostring(i), i * 5, 5)
+        p.pathfinder = Pathfinder(tmap)
+        self.em:add(p)
     end
     -- unit = Pawn(60, 5)
     camera = Camera(256, 192, camZoom)
 end
 
 function Game:enter()
+    self.uiMgr:onEnter()
     self.em:onEnter()
     _G.events:hook("onButtonClick", self.buttonClick)
 end
 
 function Game:leave()
+    self.uiMgr:onExit()
     self.em:onExit()
     _G.events:unhook("onButtonClick", self.buttonClick)
 end
@@ -80,9 +84,7 @@ end
 function Game:onClick(button)
     if button.text == "End Turn" then
         button:enabled(false)
-        for i = 1, #units do
-            units[i]:moveToNextTile()
-        end
+        _G.events:invoke("onEndTurn")
         Timer.after(.8, function() button:enabled(true) end)
     end
 end
@@ -97,13 +99,9 @@ function love.wheelmoved(x, y)
 end
 
 function Game:update(dt)
-    if dt > 0.04 then return end
-    self.em:update(dt)
-    Timer.update(dt)
 
-    for i = 1, #units do
-        units[i]:update(dt)
-    end
+    self.uiMgr:update(dt)
+    self.em:update(dt)
 
     if dragging then
         camera.x = camera.x + dragX - mx
@@ -121,8 +119,8 @@ function Game:update(dt)
     drawMousePos = tx ~= 0 and ty ~= 0
 end
 
-local function selectUnit(index)
-    selected = units[index]
+local function selectUnit(unit)
+    selected = unit
     selected.drawMe = true
 end
 
@@ -135,12 +133,6 @@ function Game:keypressed(key)
     if key == "escape" then
         -- Gamestate.switch(Menu)
         love.event.quit()
-    end
-
-    if key == "m" then
-        for i = 1, #units do
-            units[i]:moveAtRandom()
-        end
     end
 
     if key == "1" then selectUnit(1) end
@@ -166,8 +158,8 @@ function Game:mousereleased(x, y, key)
     end
     if key == 1 then
         if selected then deselectUnit() end
-        for i = 1, #units do
-            if units[i].pos.x == tx and units[i].pos.y == ty then selectUnit(i) end
+        for i = 1, #self.em.entities do
+            if self.em.entities[i].pos.x == tx and self.em.entities[i].pos.y == ty then selectUnit(self.em.entities[i]) end
         end
     end
 end
@@ -176,13 +168,12 @@ function Game:draw()
     love.graphics.clear(200, 200, 200)
     camera:attach()
     tmap:draw()
-    for i = 1, #units do
-        units[i]:draw()
-    end
+
+    self.em:draw()
     if selected then love.graphics.draw(Tileset, Quads[7], selected.pos.x * 32 - 32, selected.pos.y * 32 - 32) end
     if drawMousePos then love.graphics.rectangle("line", tx * 32 - 32, ty * 32 - 32, 32, 32) end
     camera:detach()
-    self.em:draw()
+    self.uiMgr:draw()
 end
 
 return Game

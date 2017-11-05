@@ -116,9 +116,10 @@ local function getNeighbours(q)
     return neighbours
 end
 
-function Pathfinder:findPath(sx, sy, tx, ty, blockedTile)
-    local blocked = blockedTile
-    -- if blocked then print("blocked") end
+function Pathfinder:findPath(sx, sy, tx, ty, blocked)
+    local blocked = blocked
+
+    -- Check if the target tile is reachable. if not, return
     if not self.tiles[tx * TmapSizeY + ty - 1].walkable then
         local ns = getNeighbours(Node(tx, ty))
         local surrounded = true
@@ -147,18 +148,9 @@ function Pathfinder:findPath(sx, sy, tx, ty, blockedTile)
         table.insert(closed, q)
         if #closed >= 1600 then print("ERROR: took too long to compute path") return end
         if not q then print("no path") return end
-        if q.x == tx and q.y == ty then print("already on source tile") return end
+        if q.x == tx and q.y == ty then print("already on target tile") return end
 
         local neighbours = getNeighbours(q)
-        -- if blocked then
-        --     if q.x == sx and q.y == sy then
-        --         for k, v in pairs(neighbours) do
-        --             if GlobalMap[v.x * TmapSizeY + v.y - 1].occupied then
-        --                 table.insert(closed, v)
-        --             end
-        --         end
-        --     end
-        -- end
         for k, v in pairs(neighbours) do
             if isGoal(v.x, v.y, tx, ty) then
                 if self.tiles[tx * TmapSizeY + ty - 1].walkable then
@@ -190,9 +182,5 @@ function Pathfinder:findPath(sx, sy, tx, ty, blockedTile)
     -- end while
     return nil
 end
--- if q.x < w then table.insert(q, Node(q.x+1, q.y)) end
--- if isGoal(q.x-1, q.y, tx, ty) then break end
-
-
 
 return Pathfinder

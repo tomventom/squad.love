@@ -5,117 +5,121 @@ local U = Class:derive("Unit")
 
 local speed = 0.2
 
-function U:new(x, y)
+function U:new(id, x, y)
+    self.id = id
     self.pos = vector(x, y)
     self.w = 16
     self.h = 16
-    self.hasPath = false
+
+    self.pathfinder = nil
     self.path = nil
     self.currentPath = nil
-    self.drawMe = false
-    self.timer = 0
-    self.pathfinder = nil
     self.moveSpeed = 2
-    self.remainingSpeed = 0
+    self.remainingSpeed = self.moveSpeed
     self.tweening = false
     self.lastposX, self.lastposY = x, y
+
+    self.drawMe = false
+
     GlobalMap[self.pos.x * TmapSizeY + self.pos.y - 1].occupied = true
 
-    -- if self.saySomething then self:saySomething(...) end
+    self.endTurn = function() self:moveToNextTile() end
 end
 
+function U:onEnter()
+    _G.events:hook("onEndTurn", self.endTurn)
+end
+
+function U:onExit()
+    _G.events:unhook("onEndTurn", self.endTurn)
+end
+
+-- Returns true if the first tile in the currentPath table is occupied, else returns false
 local function checkNextTile(self)
     local nextTile = self.currentPath[1]
-    -- print(string.format("Next Tile: %d,%d", nextTile.x, nextTile.y))
     return GlobalMap[nextTile.x * TmapSizeY + nextTile.y - 1].occupied
 end
 
+-- Sets the current tile's occupied value to true
 function U:confirmPosition()
     GlobalMap[self.pos.x * TmapSizeY + self.pos.y - 1].occupied = true
 end
 
+-- Rounds the position to the nearest round value
 local function fixPosition(self)
     self.pos.x = Utils.round(self.pos.x)
     self.pos.y = Utils.round(self.pos.y)
 end
 
+-- Asks the pathfinder for a path to the given x,y coordinates
+-- If the unit is currently tweening, or if
+-- the pathfinder returns no path, return
 function U:moveTo(x, y, blocked)
     if self.tweening then return end
     fixPosition(self)
     local path = self.pathfinder:findPath(self.pos.x, self.pos.y, x, y, blocked)
     if not path then self.path = nil return end
-    if self.hasPath then
-        self.path = path
-        self.currentPath = Utils.clone(self.path)
-        return
-    end
-    -- self.drawMe = true
-    self.path = path
-    self.hasPath = true
-    self.currentPath = Utils.clone(self.path)
-end
-
-function U:moveAtRandom()
-    fixPosition(self)
-    local path = self.pathfinder:findPath(self.pos.x, self.pos.y, love.math.random(1, 39), love.math.random(1, 19))
-    if not path then return end
-    if self.hasPath then
-        self.path = path
-        self.currentPath = Utils.clone(self.path)
-        return
-    end
-    -- self.drawMe = true
     self.path = path
     self.currentPath = Utils.clone(self.path)
-    self.hasPath = true
 end
 
 local function sequenceTween(self)
-    self.tweening = true
-    if #self.currentPath == 0 then return end
-    -- uncomment this for non turn-based movement
-    self.remainingSpeed = #self.currentPath
+    flux.to(self.pos, speed, {x = self.currentPath[1].x, y = self.currentPath[1].y}):oncomplete(function()
+        self.remainingSpeed = self.remainingSpeed - self.currentPath[1].cost
+        table.remove(self.currentPath, 1)
+        self.lastposX, self.lastposY = self.pos.x, self.pos.y
+        end)
 
+        -- If there's still where to go and the next tile is blocked, recalc path
+        -- if #self.currentPath > 0 and checkNextTile(self) then
+        --     self:moveTo(self.path[#self.path].x, self.path[#self.path].y, true)
+        --     if not self.path then return end
+        -- end
+
+end
+
+-- Move to the next tile/s on the current path
+function U:moveToNextTile()
+    if not self.path then return end
+    if self.tweening then return end
+
+    -- If the current path has no values, the path is empty
+    if #self.currentPath == 0 then return end
+
+    -- If the current path only has one value, make sure the remaining speed
+    -- is set to 1
+    if #self.currentPath == 1 then
+        self.remainingSpeed = 1
+    end
+
+    -- If the next tile is blocked, recalc path
     if checkNextTile(self) then
-        self.tweening = false
+        print(self.id .. " checkNextTile")
+
         self:moveTo(self.path[#self.path].x, self.path[#self.path].y, true)
         if not self.path then return end
         if self.remainingSpeed < 1 then return end
         if #self.currentPath == 1 then self.path = nil return end
     end
 
+    self.tweening = true
+
     GlobalMap[self.lastposX * TmapSizeY + self.lastposY - 1].occupied = false
     GlobalMap[self.currentPath[1].x * TmapSizeY + self.currentPath[1].y - 1].occupied = true
 
-    flux.to(self.pos, speed, {x = self.currentPath[1].x, y = self.currentPath[1].y}):oncomplete(function()
-    -- self.pos.x, self.pos.y = self.currentPath[1].x, self.currentPath[1].y
-        self.remainingSpeed = self.remainingSpeed - self.currentPath[1].cost
-        table.remove(self.currentPath, 1)
-        -- print(string.format("lastPos: %d,%d. pos: %d,%d", self.lastposX, self.lastposY, self.pos.x, self.pos.y))
-        self.lastposX, self.lastposY = self.pos.x, self.pos.y
+    sequenceTween(self)
 
+    Timer.after(.4, function()
         self.tweening = false
-        if #self.currentPath > 0 and checkNextTile(self) then
-            self:moveTo(self.path[#self.path].x, self.path[#self.path].y, true)
-            if not self.path then return end
-            if self.remainingSpeed < 1 then return end
+        -- If the unit still has speed, keep going
+        if self.remainingSpeed > 0 then
+            self:moveToNextTile()
+        else
+            self.remainingSpeed = self.moveSpeed
         end
-        if self.remainingSpeed > 0 then sequenceTween(self) end
     end)
 
-end
 
-function U:moveToNextTile()
-    self.remainingSpeed = self.moveSpeed
-    if not self.path then return end
-    if not self.tweening then
-        if #self.currentPath == 0 then return end
-        if #self.currentPath == 1 then
-            self.remainingSpeed = 1
-            self.hasPath = false
-        end
-        sequenceTween(self)
-    end
 end
 
 function U:update(dt)

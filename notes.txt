@@ -1,0 +1,15 @@
+
+
+load:
+    load map
+    create cost map
+
+update:
+    update units
+    add units to cost map
+    pathfind units
+
+render:
+    render tiles
+    render objects
+    render units

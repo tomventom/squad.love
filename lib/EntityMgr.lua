@@ -27,7 +27,7 @@ function EM:add(entity)
     entity.enabled = (entity.enabled == nil) or entity.enabled
     self.entities[#self.entities + 1] = entity
 
-    -- TODO: sort the entities by layer
+    -- sort entities
     table.sort(self.entities, layerCompare)
 end
 
@@ -69,7 +69,7 @@ end
 
 function EM:draw()
     for i = 1, #self.entities do
-        if self.entities[i].enabled then
+        if self.entities[i].enabled and self.entities[i].draw then
             self.entities[i]:draw()
         end
     end

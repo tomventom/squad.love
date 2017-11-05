@@ -19,7 +19,8 @@ local function stringToTileType(self, string)
 
 end
 
-function Tilemap:new(sizeX, sizeY)
+function Tilemap:new(sizeX, sizeY, mapImage)
+    self.mapImage = mapImage
     -- initialize tiles with a name and sprite index from Quads table
     self.grassTile = TileType("grass", 1, 1)
     self.sandTile = TileType("sand", 5, 1)
@@ -28,6 +29,8 @@ function Tilemap:new(sizeX, sizeY)
     self.empty = TileType("empty", 99, 0)
     self.tree = TileType("tree", 6, math.huge, false)
 
+    -- TODO: Have a Cost Map instead of a tilemap
+    -- TODO: Draw objects seperately
     -- create the tile array and set all to grass
     self.tiles = {}
     self.objLayer = {}
@@ -57,7 +60,6 @@ end
 
 -- set tile at x, y to given type
 function Tilemap:setTile(x, y, type)
-    -- TODO: check if tiles[x * sizeY + y-1] exists
     self.tiles[x * sizeY + y - 1] = type
 end
 
@@ -95,11 +97,12 @@ end
 
 
 function Tilemap:draw()
-    for x = 1, self.sizeX do
-        for y = 1, self.sizeY do
-            love.graphics.draw(Tileset, self.tiles[x * self.sizeY + y - 1].sprite, x * 32 - 32, y * 32 - 32)
-        end
-    end
+    -- for x = 1, self.sizeX do
+    --     for y = 1, self.sizeY do
+    --         love.graphics.draw(Tileset, self.tiles[x * self.sizeY + y - 1].sprite, x * 32 - 32, y * 32 - 32)
+    --     end
+    -- end
+    love.graphics.draw(self.mapImage, 0, 0)
     for x = 1, self.sizeX do
         for y = self.sizeY, 1, - 1 do
             love.graphics.draw(Tileset, self.objLayer[x * self.sizeY + y - 1].sprite, x * 32 - 32, y * 32 - 64)
