@@ -34,24 +34,40 @@ function U:onExit()
     _G.events:unhook("onEndTurn", self.endTurn)
 end
 
--- Returns true if the first tile in the currentPath table is occupied, else returns false
+-- Returns true if the first tile in the currentPath has another Unit in it
 local function checkNextTile(self)
     local nextTile = self.currentPath[1]
     return UnitMap[nextTile.x * TmapSizeY + nextTile.y - 1] ~= nil
 end
 
+-- Returns true if the unit in the next tile is moving to my current position
 local function movingToMyPos(self)
     local nextTile = self.currentPath[1]
     local u = UnitMap[nextTile.x * TmapSizeY + nextTile.y - 1]
-    if u and u.currentPath and #u.currentPath > 0 then
-        print("u")
-        return u.currentPath[1].x == self.pos.x and u.currentPath[1] == self.pos.y
+    if u and u.currentPath then
+        if #u.currentPath > 0 then
+            if u.currentPath[1].x == self.pos.x and u.currentPath[1].y == self.pos.y then
+                return true
+            elseif u.currentPath[1].x == self.currentPath[1].x and u.currentPath[1].y == self.currentPath[1].y then
+                return true
+            else
+                return false
+            end
+        elseif #u.currentPath <= 0 then
+            return true
+        end
+    elseif u then return true
     end
+    return false
 end
 
--- Sets the current tile's occupied value to true
-function U:confirmPosition()
-    GlobalMap[self.pos.x * TmapSizeY + self.pos.y - 1].occupied = true
+local function movingToTheSamePos(self)
+    local nextTile = self.currentPath[1]
+    local u = UnitMap[nextTile.x * TmapSizeY + nextTile.y - 1]
+    if u and u.currentPath and #u.currentPath > 0 then
+        return u.currentPath[1].x == self.currentPath[1].x and u.currentPath[1].y == self.currentPath[1].y
+    end
+    return false
 end
 
 -- Rounds the position to the nearest round value
@@ -77,12 +93,12 @@ local function sequenceTween(self)
         self.remainingSpeed = self.remainingSpeed - self.currentPath[1].cost
         table.remove(self.currentPath, 1)
         self.lastposX, self.lastposY = self.pos.x, self.pos.y
-        end)
+    end)
 end
 
 -- Move to the next tile/s on the current path
 function U:moveToNextTile()
-    -- print(self.id)
+    print(self.id)
     if not self.path then return end
     if self.tweening then return end
 
@@ -96,8 +112,8 @@ function U:moveToNextTile()
     end
 
     -- If the next tile is blocked, recalc path
-    if checkNextTile(self) then
-
+    if movingToMyPos(self) then
+        if movingToTheSamePos(self) then return end
         self:moveTo(self.path[#self.path].x, self.path[#self.path].y, true)
         if not self.path then return end
         if self.remainingSpeed < 1 then return end
@@ -107,9 +123,9 @@ function U:moveToNextTile()
     self.tweening = true
 
     UnitMap[self.lastposX * TmapSizeY + self.lastposY - 1] = nil
-    UnitMap[self.currentPath[1].x * TmapSizeY + self.currentPath[1].y - 1] = self
 
     sequenceTween(self)
+    UnitMap[self.currentPath[1].x * TmapSizeY + self.currentPath[1].y - 1] = self
 
     Timer.after(.4, function()
         self.tweening = false
