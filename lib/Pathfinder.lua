@@ -6,8 +6,8 @@ local Pathfinder = Class:derive("Pathfinder")
 local min, abs = math.min, math.abs
 local sqrt2 = math.sqrt(2)
 
-function Pathfinder:new(tilemap)
-    self.tiles = tilemap:getTileGrid()
+function Pathfinder:new()
+
 end
 
 local function isGoal(x, y, tx, ty)
@@ -120,11 +120,11 @@ function Pathfinder:findPath(sx, sy, tx, ty, blocked)
     local blocked = blocked
 
     -- Check if the target tile is reachable. if not, return
-    if not self.tiles[tx * TmapSizeY + ty - 1].walkable then
+    if not GlobalMap[tx * TmapSizeY + ty - 1].walkable then
         local ns = getNeighbours(Node(tx, ty))
         local surrounded = true
         for k, v in pairs(ns) do
-            if self.tiles[v.x * TmapSizeY + v.y - 1].walkable then surrounded = false end
+            if GlobalMap[v.x * TmapSizeY + v.y - 1].walkable then surrounded = false end
         end
         if surrounded == true then return end
     end
@@ -153,18 +153,18 @@ function Pathfinder:findPath(sx, sy, tx, ty, blocked)
         local neighbours = getNeighbours(q)
         for k, v in pairs(neighbours) do
             if isGoal(v.x, v.y, tx, ty) then
-                if self.tiles[tx * TmapSizeY + ty - 1].walkable then
+                if GlobalMap[tx * TmapSizeY + ty - 1].walkable then
                     return constructPath(v, false, closed)
                 else
                     return constructPath(v, true, closed)
                 end
             end
-            v.g = self.tiles[v.x * TmapSizeY + v.y - 1].moveCost + v.parent.g
+            v.g = GlobalMap[v.x * TmapSizeY + v.y - 1].moveCost + v.parent.g
             v.h = heuristic(v.x, v.y, tx, ty)
             v.f = v.g + v.h
-            v.cost = self.tiles[v.x * TmapSizeY + v.y - 1].moveCost
+            v.cost = GlobalMap[v.x * TmapSizeY + v.y - 1].moveCost
             if blocked then
-                if GlobalMap[v.x * TmapSizeY + v.y - 1].occupied then
+                if UnitMap[v.x * TmapSizeY + v.y - 1] ~= nil then
                     table.insert(closed, v)
                 end
             end

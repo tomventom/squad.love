@@ -21,7 +21,7 @@ function U:new(id, x, y)
 
     self.drawMe = false
 
-    GlobalMap[self.pos.x * TmapSizeY + self.pos.y - 1].occupied = true
+    UnitMap[self.pos.x * TmapSizeY + self.pos.y - 1] = self
 
     self.endTurn = function() self:moveToNextTile() end
 end
@@ -37,7 +37,16 @@ end
 -- Returns true if the first tile in the currentPath table is occupied, else returns false
 local function checkNextTile(self)
     local nextTile = self.currentPath[1]
-    return GlobalMap[nextTile.x * TmapSizeY + nextTile.y - 1].occupied
+    return UnitMap[nextTile.x * TmapSizeY + nextTile.y - 1] ~= nil
+end
+
+local function movingToMyPos(self)
+    local nextTile = self.currentPath[1]
+    local u = UnitMap[nextTile.x * TmapSizeY + nextTile.y - 1]
+    if u and u.currentPath and #u.currentPath > 0 then
+        print("u")
+        return u.currentPath[1].x == self.pos.x and u.currentPath[1] == self.pos.y
+    end
 end
 
 -- Sets the current tile's occupied value to true
@@ -69,17 +78,11 @@ local function sequenceTween(self)
         table.remove(self.currentPath, 1)
         self.lastposX, self.lastposY = self.pos.x, self.pos.y
         end)
-
-        -- If there's still where to go and the next tile is blocked, recalc path
-        -- if #self.currentPath > 0 and checkNextTile(self) then
-        --     self:moveTo(self.path[#self.path].x, self.path[#self.path].y, true)
-        --     if not self.path then return end
-        -- end
-
 end
 
 -- Move to the next tile/s on the current path
 function U:moveToNextTile()
+    -- print(self.id)
     if not self.path then return end
     if self.tweening then return end
 
@@ -94,7 +97,6 @@ function U:moveToNextTile()
 
     -- If the next tile is blocked, recalc path
     if checkNextTile(self) then
-        print(self.id .. " checkNextTile")
 
         self:moveTo(self.path[#self.path].x, self.path[#self.path].y, true)
         if not self.path then return end
@@ -104,8 +106,8 @@ function U:moveToNextTile()
 
     self.tweening = true
 
-    GlobalMap[self.lastposX * TmapSizeY + self.lastposY - 1].occupied = false
-    GlobalMap[self.currentPath[1].x * TmapSizeY + self.currentPath[1].y - 1].occupied = true
+    UnitMap[self.lastposX * TmapSizeY + self.lastposY - 1] = nil
+    UnitMap[self.currentPath[1].x * TmapSizeY + self.currentPath[1].y - 1] = self
 
     sequenceTween(self)
 

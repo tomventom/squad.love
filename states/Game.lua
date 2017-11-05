@@ -59,6 +59,7 @@ function Game:init()
     self.uiMgr:add(self.endTurnButton)
     self.buttonClick = function(button) self:onClick(button) end
     GlobalMap = tmap:getTileGrid()
+    UnitMap = {}
 
     for i = 1, 4 do
         local p = Unit(tostring(i), i * 5, 5)

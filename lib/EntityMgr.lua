@@ -14,6 +14,10 @@ local function layerCompare(e1, e2)
     return e1.layer < e2.layer
 end
 
+local function idCompare(e1, e2)
+    return e1.id > e2.id
+end
+
 function EM:new()
     self.entities = {}
 end
@@ -23,12 +27,13 @@ function EM:add(entity)
 
     -- add additional table entries that need to exist in all entities
     entity.layer = entity.layer or 1
+    entity.id = entity.id or -1
     entity.started = entity.started or false
     entity.enabled = (entity.enabled == nil) or entity.enabled
     self.entities[#self.entities + 1] = entity
 
     -- sort entities
-    table.sort(self.entities, layerCompare)
+    table.sort(self.entities, idCompare)
 end
 
 function EM:onEnter()
