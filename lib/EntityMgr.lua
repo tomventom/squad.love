@@ -15,7 +15,7 @@ local function layerCompare(e1, e2)
 end
 
 local function idCompare(e1, e2)
-    return e1.id > e2.id
+    return e1.id < e2.id
 end
 
 function EM:new()

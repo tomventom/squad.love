@@ -109,7 +109,6 @@ function love.wheelmoved(x, y)
 end
 
 function Game:update(dt)
-
     self.uiMgr:update(dt)
     self.em:update(dt)
 
@@ -182,11 +181,23 @@ function Game:draw()
     self.em:draw()
     if selected then love.graphics.draw(Tileset, Quads[7], selected.pos.x * 32 - 32, selected.pos.y * 32 - 32) end
     if drawMousePos then
+        if UnitMap[tx * TmapSizeY + ty - 1] ~= nil then
+            love.graphics.setColor(255, 0, 0)
+        else
+            love.graphics.setColor(0, 255, 0)
+        end
         love.graphics.rectangle("line", tx * 32 - 32, ty * 32 - 32, 32, 32)
         love.graphics.setColor(0, 0, 0)
         love.graphics.print(tx .. ", " .. ty, mx + 10, my - 10)
         love.graphics.setColor(255, 255, 255)
     end
+    -- for x = 1, TmapSizeX do
+    --     for y = 1, TmapSizeY do
+    --         if UnitMap[x * TmapSizeY + y - 1] ~= nil then
+    --             love.graphics.rectangle("line", x * 32 - 32, y * 32 - 32, 32, 32)
+    --         end
+    --     end
+    -- end
     camera:detach()
     self.uiMgr:draw()
 end

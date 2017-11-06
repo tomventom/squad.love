@@ -24,14 +24,17 @@ function U:new(id, x, y)
     UnitMap[self.pos.x * TmapSizeY + self.pos.y - 1] = self
 
     self.endTurn = function() self:moveToNextTile() end
+    self.confirmPos = function() self:confirmPosition() end
 end
 
 function U:onEnter()
     _G.events:hook("onEndTurn", self.endTurn)
+    _G.events:hook("onConfirmPos", self.confirmPos)
 end
 
 function U:onExit()
     _G.events:unhook("onEndTurn", self.endTurn)
+    _G.events:unhook("onConfirmPos", self.confirmPos)
 end
 
 -- Returns true if the first tile in the currentPath has another Unit in it
@@ -70,6 +73,12 @@ local function fixPosition(self)
     self.pos.y = Utils.round(self.pos.y)
 end
 
+function U:confirmPosition()
+    -- if self.pos then
+        UnitMap[self.pos.x * TmapSizeY + self.pos.y - 1] = self
+    -- end
+end
+
 -- Asks the pathfinder for a path to the given x,y coordinates
 -- If the unit is currently tweening, or if
 -- the pathfinder returns no path, return
@@ -83,17 +92,17 @@ function U:moveTo(x, y, blocked)
 end
 
 local function sequenceTween(self)
-    flux.to(self.pos, 1, {x = self.currentPath[1].x, y = self.currentPath[1].y}):oncomplete(function()
-        self.remainingSpeed = self.remainingSpeed - self.currentPath[1].cost
-        table.remove(self.currentPath, 1)
-        self.lastposX, self.lastposY = self.pos.x, self.pos.y
-    end)
+    -- flux.to(self.pos, 1, {x = self.currentPath[1].x, y = self.currentPath[1].y}):oncomplete(function()
+
+    -- end)
 end
 
 -- Move to the next tile/s on the current path
 function U:moveToNextTile()
-    -- print(self.id)
-    UnitMap[self.pos.x * TmapSizeY + self.pos.y - 1] = self
+    print(string.format("==========\nID: %d Start \n", self.id))
+    -- UnitMap[self.pos.x * TmapSizeY + self.pos.y - 1] = self
+    _G.events:invoke("onConfirmPos")
+
 
     if not self.path then return end
     if self.tweening then return end
@@ -111,20 +120,28 @@ function U:moveToNextTile()
     if movingToTheSamePos(self) then return end
     if movingToMyPos(self) then
         self:moveTo(self.path[#self.path].x, self.path[#self.path].y, true)
-        if not self.path then return end
-        if self.remainingSpeed < 1 then return end
-        if #self.currentPath == 1 then self.path = nil return end
+        if not self.path then print("not self.path") return end
+        if self.remainingSpeed < 1 then print("self.remainingSpeed < 1") return end
+        if #self.currentPath == 1 then print("#self.currentPath == 1") self.currentPath = nil self.path = nil return end
+    -- elseif checkNextTile(self) then
+    --     self:moveTo(self.path[#self.path].x, self.path[#self.path].y, true)
+    --     if not self.path then print("not self.path") return end
     end
 
     self.tweening = true
 
     UnitMap[self.lastposX * TmapSizeY + self.lastposY - 1] = nil
-
     UnitMap[self.currentPath[1].x * TmapSizeY + self.currentPath[1].y - 1] = self
-    print(string.format("ID: %d \nLast Pos: %d,%d is now nil \nNext Pos: %d,%d is now self \n======", self.id, self.lastposX, self.lastposY, self.currentPath[1].x, self.currentPath[1].y))
-    sequenceTween(self)
+    print(string.format("ID: %d \nLast Pos: %d,%d is now nil \nNext Pos: %d,%d is now self", self.id, self.lastposX, self.lastposY, self.currentPath[1].x, self.currentPath[1].y))
 
-    Timer.after(2, function()
+    -- sequenceTween(self)
+    self.pos.x, self.pos.y = self.currentPath[1].x, self.currentPath[1].y
+    self.remainingSpeed = self.remainingSpeed - self.currentPath[1].cost
+    table.remove(self.currentPath, 1)
+    self.lastposX, self.lastposY = self.pos.x, self.pos.y
+    -- sequence done
+
+    -- Timer.after(.4, function()
         self.tweening = false
         -- If the unit still has speed, keep going
         if self.remainingSpeed > 0 then
@@ -132,8 +149,10 @@ function U:moveToNextTile()
         else
             self.remainingSpeed = self.moveSpeed
         end
-    end)
+    -- end)
+    _G.events:invoke("onConfirmPos")
 
+    print(string.format("ID: %d End \n==========\n", self.id))
 
 end
 
