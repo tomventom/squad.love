@@ -34,7 +34,8 @@ function Menu:onClick(button)
 	if button.text == "Start" then
 		Gamestate.switch(Game)
 	elseif button.text == "Exit" then
-		love.event.quit()
+		-- love.event.quit()
+        Tween.create(button.pos, "x", 0, 1)
 	end
 end
 

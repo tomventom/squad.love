@@ -102,4 +102,6 @@ function U.clone(t)
     return target
 end
 
+function U.lerp(a,b,t) return a * (1-t) + b * t end
+
 return U

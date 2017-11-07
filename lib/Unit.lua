@@ -1,13 +1,11 @@
-local Class = require("lib.Class")
-local vector = require("hump.vector")
+local SuperUnit = require("lib.SuperUnit")
 
-local U = Class:derive("Unit")
+local U = SuperUnit:derive("Unit")
 
 local speed = 0.2
 
 function U:new(id, x, y)
-    self.id = id
-    self.pos = vector(x, y)
+    U.super.new(self, id, x, y)
     self.w = 16
     self.h = 16
 
@@ -25,16 +23,19 @@ function U:new(id, x, y)
 
     self.endTurn = function() self:moveToNextTile() end
     self.confirmPos = function() self:confirmPosition() end
+    self.moveToPoint = function(x, y) self:moveTo(x, y) end
 end
 
 function U:onEnter()
     _G.events:hook("onEndTurn", self.endTurn)
     _G.events:hook("onConfirmPos", self.confirmPos)
+    _G.events:hook("onMoveToPoint", self.moveToPoint)
 end
 
 function U:onExit()
     _G.events:unhook("onEndTurn", self.endTurn)
     _G.events:unhook("onConfirmPos", self.confirmPos)
+    _G.events:unhook("onMoveToPoint", self.moveToPoint)
 end
 
 -- Returns true if the first tile in the currentPath has another Unit in it
@@ -47,9 +48,19 @@ end
 local function movingToMyPos(self)
     local nextTile = self.currentPath[1]
     local u = UnitMap[nextTile.x * TmapSizeY + nextTile.y - 1]
-    if u and u.currentPath then
+    if u and u:is(U) and u.currentPath then
         if #u.currentPath > 0 then
-            return u.currentPath[1].x == self.pos.x and u.currentPath[1].y == self.pos.y
+            if u.currentPath[1].x == self.pos.x and u.currentPath[1].y == self.pos.y then
+                return true
+            elseif u.currentPath[1].x == self.currentPath[1].x and u.currentPath[1].y == self.currentPath[1].y then
+                return true
+            elseif UnitMap[u.currentPath[1].x * TmapSizeY + u.currentPath[1].y - 1] ~= nil then
+                return true
+            elseif u.pos.x == self.currentPath[1].x and u.pos.y == self.currentPath[1].y then
+                return true
+            else
+                return false
+            end
         elseif #u.currentPath <= 0 then
             return true
         end
@@ -74,9 +85,7 @@ local function fixPosition(self)
 end
 
 function U:confirmPosition()
-    -- if self.pos then
-        UnitMap[self.pos.x * TmapSizeY + self.pos.y - 1] = self
-    -- end
+    UnitMap[self.pos.x * TmapSizeY + self.pos.y - 1] = self
 end
 
 -- Asks the pathfinder for a path to the given x,y coordinates
@@ -91,15 +100,8 @@ function U:moveTo(x, y, blocked)
     self.currentPath = Utils.clone(self.path)
 end
 
-local function sequenceTween(self)
-    -- flux.to(self.pos, 1, {x = self.currentPath[1].x, y = self.currentPath[1].y}):oncomplete(function()
-
-    -- end)
-end
-
 -- Move to the next tile/s on the current path
 function U:moveToNextTile()
-    print(string.format("==========\nID: %d Start \n", self.id))
     -- UnitMap[self.pos.x * TmapSizeY + self.pos.y - 1] = self
     _G.events:invoke("onConfirmPos")
 
@@ -120,44 +122,39 @@ function U:moveToNextTile()
     if movingToTheSamePos(self) then return end
     if movingToMyPos(self) then
         self:moveTo(self.path[#self.path].x, self.path[#self.path].y, true)
-        if not self.path then print("not self.path") return end
-        if self.remainingSpeed < 1 then print("self.remainingSpeed < 1") return end
-        if #self.currentPath == 1 then print("#self.currentPath == 1") self.currentPath = nil self.path = nil return end
-    -- elseif checkNextTile(self) then
-    --     self:moveTo(self.path[#self.path].x, self.path[#self.path].y, true)
-    --     if not self.path then print("not self.path") return end
+        if not self.path then return end
+        if self.remainingSpeed < 1 then return end
+        if #self.currentPath == 1 then self.currentPath = nil self.path = nil return end
     end
 
     self.tweening = true
 
     UnitMap[self.lastposX * TmapSizeY + self.lastposY - 1] = nil
     UnitMap[self.currentPath[1].x * TmapSizeY + self.currentPath[1].y - 1] = self
-    print(string.format("ID: %d \nLast Pos: %d,%d is now nil \nNext Pos: %d,%d is now self", self.id, self.lastposX, self.lastposY, self.currentPath[1].x, self.currentPath[1].y))
 
-    -- sequenceTween(self)
+    -- Tween.create(self.drawPos, "x", self.currentPath[1].x, .3)
+    -- Tween.create(self.drawPos, "y", self.currentPath[1].y, .3)
+    flux.to(self.drawPos, .3, {x = self.currentPath[1].x, y = self.currentPath[1].y}):ease("quadinout")
+
     self.pos.x, self.pos.y = self.currentPath[1].x, self.currentPath[1].y
     self.remainingSpeed = self.remainingSpeed - self.currentPath[1].cost
     table.remove(self.currentPath, 1)
     self.lastposX, self.lastposY = self.pos.x, self.pos.y
     -- sequence done
+    self.tweening = false
 
-    -- Timer.after(.4, function()
-        self.tweening = false
-        -- If the unit still has speed, keep going
-        if self.remainingSpeed > 0 then
-            self:moveToNextTile()
-        else
-            self.remainingSpeed = self.moveSpeed
-        end
-    -- end)
+    -- If the unit still has speed, keep going
+    if self.remainingSpeed > 0 then
+        self:moveToNextTile()
+    else
+        self.remainingSpeed = self.moveSpeed
+    end
     _G.events:invoke("onConfirmPos")
-
-    print(string.format("ID: %d End \n==========\n", self.id))
 
 end
 
 function U:update(dt)
-
+    U.super.update(self, dt)
 end
 
 function U:drawPath()
@@ -174,8 +171,11 @@ function U:drawPath()
 end
 
 function U:draw()
-    love.graphics.draw(Tileset, Quads[4], self.pos.x * 32 - 32, self.pos.y * 32 - 32)
+    local r, g, b, a = love.graphics.getColor()
+    love.graphics.setColor(255, 0, 0)
+    U.super.draw(self)
     self:drawPath()
+    love.graphics.setColor(r, g, b, a)
 end
 
 return U

@@ -3,7 +3,7 @@ local Game = {}
 
 local Camera = require("hump.camera")
 local Tilemap = require("lib.Tilemap")
--- local Unit = require("lib.Unit")
+local Player = require("lib.Player")
 local Unit = require("lib.Unit")
 local Pathfinder = require("lib.Pathfinder")
 
@@ -47,6 +47,7 @@ local dragging = false
 local dragX, dragY = 0, 0
 local camX, camY, camZoom = 0, 0, 1
 
+local player
 
 -- initialize the map, unit and camera
 function Game:init()
@@ -61,21 +62,21 @@ function Game:init()
     GlobalMap = tmap:getTileGrid()
     UnitMap = {}
 
-    -- for i = 1, 4 do
-        local p = Unit(tostring(1), 15, 8)
-        p.pathfinder = Pathfinder(tmap)
+        local p = Player("1", 5, 5)
         self.em:add(p)
-        local p = Unit(tostring(2), 16, 7)
-        p.pathfinder = Pathfinder(tmap)
+        local p = Unit("2", 16, 7)
+        p.pathfinder = Pathfinder()
         self.em:add(p)
-        local p = Unit(tostring(3), 17, 8)
-        p.pathfinder = Pathfinder(tmap)
+        local p = Unit("3", 17, 8)
+        p.pathfinder = Pathfinder()
         self.em:add(p)
-        local p = Unit(tostring(4), 16, 9)
-        p.pathfinder = Pathfinder(tmap)
+        local p = Unit("4", 16, 9)
+        p.pathfinder = Pathfinder()
         self.em:add(p)
-    -- end
-    -- unit = Pawn(60, 5)
+
+    for i = 1, #self.em.entities do
+        if self.em.entities[i]:is(Player) then player = self.em.entities[i] print("found player") end
+    end
     camera = Camera(256, 192, camZoom)
 end
 
@@ -95,7 +96,7 @@ function Game:onClick(button)
     if button.text == "End Turn" then
         button:enabled(false)
         _G.events:invoke("onEndTurn")
-        Timer.after(.8, function() button:enabled(true) end)
+        Timer.after(.6, function() button:enabled(true) end)
     end
 end
 
@@ -168,7 +169,9 @@ function Game:mousereleased(x, y, key)
     if key == 1 then
         if selected then deselectUnit() end
         for i = 1, #self.em.entities do
-            if self.em.entities[i].pos.x == tx and self.em.entities[i].pos.y == ty then selectUnit(self.em.entities[i]) end
+            if self.em.entities[i]:is(Unit) then
+                if self.em.entities[i].pos.x == tx and self.em.entities[i].pos.y == ty then selectUnit(self.em.entities[i]) end
+            end
         end
     end
 end

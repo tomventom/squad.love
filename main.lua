@@ -6,6 +6,7 @@ Game = require("states.Game")
 
 Timer = require("hump.timer")
 flux = require("lib.flux")
+Tween = require("lib.Tween")
 
 function love.load()
     love.graphics.setDefaultFilter("nearest", "nearest")
@@ -20,6 +21,7 @@ function love.update(dt)
     if not love.window.hasMouseFocus() then return end
     Timer.update(dt)
     flux.update(dt)
+    Tween.update(dt)
 
 end
 
